@@ -138,7 +138,7 @@ func Load(target any, opts ...Option) error {
 
 	// 1. Apply defaults.
 	if err := applyDefaults(target, fields); err != nil {
-		return fmt.Errorf("%w: %v", ErrParse, err)
+		return fmt.Errorf("%w: %w", ErrParse, err)
 	}
 
 	// 2. Apply file sources in caller order.
@@ -146,20 +146,20 @@ func Load(target any, opts ...Option) error {
 		if fs.path != "" {
 			if err := loadFile(target, fs.path, fields); err != nil {
 				if isFileNotFound(err) {
-					return fmt.Errorf("%w: %v", ErrFileNotFound, err)
+					return fmt.Errorf("%w: %w", ErrFileNotFound, err)
 				}
-				return fmt.Errorf("%w: %v", ErrParse, err)
+				return fmt.Errorf("%w: %w", ErrParse, err)
 			}
 		} else {
 			if err := loadFileContent(target, fs.data, fs.format, fields); err != nil {
-				return fmt.Errorf("%w: %v", ErrParse, err)
+				return fmt.Errorf("%w: %w", ErrParse, err)
 			}
 		}
 	}
 
 	// 3. Apply environment variables.
 	if err := applyEnv(target, fields, o.envPrefix); err != nil {
-		return fmt.Errorf("%w: %v", ErrParse, err)
+		return fmt.Errorf("%w: %w", ErrParse, err)
 	}
 
 	// 4. Apply flags.
@@ -173,7 +173,7 @@ func Load(target any, opts ...Option) error {
 				osExit(0)
 				return nil
 			}
-			return fmt.Errorf("%w: %v", ErrParse, err)
+			return fmt.Errorf("%w: %w", ErrParse, err)
 		}
 	}
 
