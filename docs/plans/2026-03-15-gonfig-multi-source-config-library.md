@@ -216,15 +216,15 @@ port = 3306
 - [x] run tests — must pass before next task
 
 ### Task 13: Verify acceptance criteria
-- [ ] verify all formats work: JSON, YAML, TOML, env, flags — each tested in isolation and combined
-- [ ] verify priority order: flag > env > file > default — tested with all sources setting same key
-- [ ] verify nested structs work across all sources
-- [ ] verify slices and maps work across applicable sources
-- [ ] verify validation catches invalid config and reports all errors
-- [ ] verify help/usage output is correct and complete
-- [ ] run full test suite
-- [ ] run linter (`golangci-lint run` if configured, otherwise `go vet ./...`)
-- [ ] verify test coverage meets 80%+ (`go test -coverprofile=coverage.out ./... && go tool cover -func=coverage.out`)
+- [x] verify all formats work: JSON, YAML, TOML, env, flags — each tested in isolation and combined
+- [x] verify priority order: flag > env > file > default — tested with all sources setting same key
+- [x] verify nested structs work across all sources
+- [x] verify slices and maps work across applicable sources
+- [x] verify validation catches invalid config and reports all errors
+- [x] verify help/usage output is correct and complete
+- [x] run full test suite
+- [x] run linter (`golangci-lint run` if configured, otherwise `go vet ./...`)
+- [x] verify test coverage meets 80%+ (`go test -coverprofile=coverage.out ./... && go tool cover -func=coverage.out`)
 
 ### Task 14: [Final] Documentation
 - [ ] write README.md with: badges, install instructions, quick start, full tag reference, all format examples, API reference, priority explanation
