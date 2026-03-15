@@ -1,0 +1,28 @@
+# gonfig
+
+> Multi-source configuration loading for Go. Define your config as a struct with tags, and gonfig populates it from environment variables, command-line flags, config files (JSON, YAML, TOML), and defaults — with a clear priority order: flags > env > file > defaults.
+
+gonfig uses a tag-based API where struct field names are automatically derived into environment variable names (`DB_HOST`), flag names (`--db-host`), and config file keys (`db.host`). Explicit tags (`env`, `flag`, `gonfig`) override auto-derivation when needed. Nested structs are fully supported — `DB.Host` maps to `DB_HOST` / `--db-host` / `db.host` automatically.
+
+The library validates configuration after loading using `validate` struct tags (`required`, `min`, `max`, `oneof`). All validation errors are collected and returned together as a structured `ValidationError`. A `Usage` function generates formatted help text from struct metadata.
+
+Minimal dependencies: only `gopkg.in/yaml.v3` and `github.com/BurntSushi/toml` beyond the standard library. Requires Go 1.22+.
+
+## Docs
+
+- [README](https://github.com/nniel-ape/gonfig/blob/main/README.md): Full documentation with tag reference, API, config formats, type matrix, and examples
+- [Go Reference](https://pkg.go.dev/github.com/nniel-ape/gonfig): Godoc with runnable examples
+- [Examples](https://github.com/nniel-ape/gonfig/tree/main/examples): 6 runnable demos from basic defaults to advanced types and manual error handling
+
+## API
+
+- [Load](https://pkg.go.dev/github.com/nniel-ape/gonfig#Load): Main entry point — populates a struct pointer from all configured sources
+- [Option](https://pkg.go.dev/github.com/nniel-ape/gonfig#Option): Functional options — WithFile, WithEnvPrefix, WithFlags, WithFileContent, WithAutoHelp, WithoutValidation
+- [Usage](https://pkg.go.dev/github.com/nniel-ape/gonfig#Usage): Generates aligned columnar help text grouped by struct sections
+- [ValidationError](https://pkg.go.dev/github.com/nniel-ape/gonfig#ValidationError): Structured validation error with per-field details via FieldError slice
+- [Error sentinels](https://pkg.go.dev/github.com/nniel-ape/gonfig#ErrInvalidTarget): ErrInvalidTarget, ErrFileNotFound, ErrParse, ErrValidation — use errors.Is/errors.As
+
+## Optional
+
+- [Examples README](https://github.com/nniel-ape/gonfig/blob/main/examples/README.md): How to run each of the 6 example programs
+- [CLAUDE.md](https://github.com/nniel-ape/gonfig/blob/main/CLAUDE.md): Internal architecture, loading pipeline, and design patterns
