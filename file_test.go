@@ -1011,6 +1011,311 @@ func TestSlice_FlagCommaSeparated(t *testing.T) {
 	}
 }
 
+// --- New slice types enabled by generalized slice handling ---
+
+func TestSetSliceFromAny_DurationSlice(t *testing.T) {
+	t.Run("basic", func(t *testing.T) {
+		field := reflect.New(reflect.TypeFor[[]time.Duration]()).Elem()
+		err := setSliceFromAny(field, []any{"5s", "10s", "1m"}, field.Type())
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		got := field.Interface().([]time.Duration)
+		want := []time.Duration{5 * time.Second, 10 * time.Second, time.Minute}
+		if !reflect.DeepEqual(got, want) {
+			t.Errorf("got %v, want %v", got, want)
+		}
+	})
+
+	t.Run("compound durations", func(t *testing.T) {
+		field := reflect.New(reflect.TypeFor[[]time.Duration]()).Elem()
+		err := setSliceFromAny(field, []any{"1h30m", "500µs"}, field.Type())
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		got := field.Interface().([]time.Duration)
+		want := []time.Duration{time.Hour + 30*time.Minute, 500 * time.Microsecond}
+		if !reflect.DeepEqual(got, want) {
+			t.Errorf("got %v, want %v", got, want)
+		}
+	})
+
+	t.Run("empty", func(t *testing.T) {
+		field := reflect.New(reflect.TypeFor[[]time.Duration]()).Elem()
+		err := setSliceFromAny(field, []any{}, field.Type())
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		got := field.Interface().([]time.Duration)
+		if got == nil || len(got) != 0 {
+			t.Errorf("got %v, want empty non-nil slice", got)
+		}
+	})
+
+	t.Run("type mismatch", func(t *testing.T) {
+		field := reflect.New(reflect.TypeFor[[]time.Duration]()).Elem()
+		err := setSliceFromAny(field, []any{"5s", 123}, field.Type())
+		if err == nil {
+			t.Fatal("expected error for int element in duration slice")
+		}
+	})
+}
+
+func TestSetSliceFromAny_BoolSlice(t *testing.T) {
+	t.Run("basic", func(t *testing.T) {
+		field := reflect.New(reflect.TypeFor[[]bool]()).Elem()
+		err := setSliceFromAny(field, []any{true, false, true}, field.Type())
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		got := field.Interface().([]bool)
+		want := []bool{true, false, true}
+		if !reflect.DeepEqual(got, want) {
+			t.Errorf("got %v, want %v", got, want)
+		}
+	})
+
+	t.Run("type mismatch", func(t *testing.T) {
+		field := reflect.New(reflect.TypeFor[[]bool]()).Elem()
+		err := setSliceFromAny(field, []any{true, "notbool"}, field.Type())
+		if err == nil {
+			t.Fatal("expected error for string element in bool slice")
+		}
+	})
+}
+
+func TestSetSliceFromAny_Int64Slice(t *testing.T) {
+	t.Run("from float64 (JSON)", func(t *testing.T) {
+		field := reflect.New(reflect.TypeFor[[]int64]()).Elem()
+		err := setSliceFromAny(field, []any{float64(100), float64(200)}, field.Type())
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		got := field.Interface().([]int64)
+		want := []int64{100, 200}
+		if !reflect.DeepEqual(got, want) {
+			t.Errorf("got %v, want %v", got, want)
+		}
+	})
+
+	t.Run("from int and int64 (YAML/TOML)", func(t *testing.T) {
+		field := reflect.New(reflect.TypeFor[[]int64]()).Elem()
+		err := setSliceFromAny(field, []any{int(100), int64(200)}, field.Type())
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		got := field.Interface().([]int64)
+		want := []int64{100, 200}
+		if !reflect.DeepEqual(got, want) {
+			t.Errorf("got %v, want %v", got, want)
+		}
+	})
+
+	t.Run("non-integral float64", func(t *testing.T) {
+		field := reflect.New(reflect.TypeFor[[]int64]()).Elem()
+		err := setSliceFromAny(field, []any{float64(1.5)}, field.Type())
+		if err == nil {
+			t.Fatal("expected error for non-integral float64 in int64 slice")
+		}
+	})
+}
+
+func TestApplyMap_DurationSlice(t *testing.T) {
+	type Config struct {
+		Timeouts []time.Duration `gonfig:"timeouts"`
+	}
+
+	var cfg Config
+	fields := extractFields(reflect.ValueOf(&cfg).Elem(), "", nil)
+
+	data := map[string]any{
+		"timeouts": []any{"5s", "30s", "2m"},
+	}
+
+	if err := applyMap(&cfg, data, fields); err != nil {
+		t.Fatalf("applyMap: unexpected error: %v", err)
+	}
+
+	want := []time.Duration{5 * time.Second, 30 * time.Second, 2 * time.Minute}
+	if !reflect.DeepEqual(cfg.Timeouts, want) {
+		t.Errorf("Timeouts = %v, want %v", cfg.Timeouts, want)
+	}
+}
+
+func TestApplyMap_BoolSlice(t *testing.T) {
+	type Config struct {
+		Flags []bool `gonfig:"flags"`
+	}
+
+	var cfg Config
+	fields := extractFields(reflect.ValueOf(&cfg).Elem(), "", nil)
+
+	data := map[string]any{
+		"flags": []any{true, false, true},
+	}
+
+	if err := applyMap(&cfg, data, fields); err != nil {
+		t.Fatalf("applyMap: unexpected error: %v", err)
+	}
+
+	want := []bool{true, false, true}
+	if !reflect.DeepEqual(cfg.Flags, want) {
+		t.Errorf("Flags = %v, want %v", cfg.Flags, want)
+	}
+}
+
+func TestApplyMap_Int64Slice(t *testing.T) {
+	type Config struct {
+		IDs []int64 `gonfig:"ids"`
+	}
+
+	var cfg Config
+	fields := extractFields(reflect.ValueOf(&cfg).Elem(), "", nil)
+
+	data := map[string]any{
+		"ids": []any{float64(100), float64(200), float64(300)},
+	}
+
+	if err := applyMap(&cfg, data, fields); err != nil {
+		t.Fatalf("applyMap: unexpected error: %v", err)
+	}
+
+	want := []int64{100, 200, 300}
+	if !reflect.DeepEqual(cfg.IDs, want) {
+		t.Errorf("IDs = %v, want %v", cfg.IDs, want)
+	}
+}
+
+func TestSlice_DurationEnvCommaSeparated(t *testing.T) {
+	type Config struct {
+		Timeouts []time.Duration `gonfig:"timeouts"`
+	}
+
+	var cfg Config
+	fields := extractFields(reflect.ValueOf(&cfg).Elem(), "", nil)
+
+	t.Setenv("TIMEOUTS", "5s,30s,2m")
+
+	if err := applyEnv(&cfg, fields, ""); err != nil {
+		t.Fatalf("applyEnv: unexpected error: %v", err)
+	}
+
+	want := []time.Duration{5 * time.Second, 30 * time.Second, 2 * time.Minute}
+	if !reflect.DeepEqual(cfg.Timeouts, want) {
+		t.Errorf("Timeouts = %v, want %v", cfg.Timeouts, want)
+	}
+}
+
+func TestSlice_DurationFlagCommaSeparated(t *testing.T) {
+	type Config struct {
+		Timeouts []time.Duration `gonfig:"timeouts"`
+	}
+
+	var cfg Config
+	fields := extractFields(reflect.ValueOf(&cfg).Elem(), "", nil)
+
+	args := []string{"--timeouts", "5s,30s,2m"}
+
+	if err := applyFlags(&cfg, fields, args); err != nil {
+		t.Fatalf("applyFlags: unexpected error: %v", err)
+	}
+
+	want := []time.Duration{5 * time.Second, 30 * time.Second, 2 * time.Minute}
+	if !reflect.DeepEqual(cfg.Timeouts, want) {
+		t.Errorf("Timeouts = %v, want %v", cfg.Timeouts, want)
+	}
+}
+
+func TestSlice_BoolEnvCommaSeparated(t *testing.T) {
+	type Config struct {
+		Flags []bool `gonfig:"flags"`
+	}
+
+	var cfg Config
+	fields := extractFields(reflect.ValueOf(&cfg).Elem(), "", nil)
+
+	t.Setenv("FLAGS", "true,false,true")
+
+	if err := applyEnv(&cfg, fields, ""); err != nil {
+		t.Fatalf("applyEnv: unexpected error: %v", err)
+	}
+
+	want := []bool{true, false, true}
+	if !reflect.DeepEqual(cfg.Flags, want) {
+		t.Errorf("Flags = %v, want %v", cfg.Flags, want)
+	}
+}
+
+func TestSlice_BoolFlagCommaSeparated(t *testing.T) {
+	type Config struct {
+		Flags []bool `gonfig:"flags"`
+	}
+
+	var cfg Config
+	fields := extractFields(reflect.ValueOf(&cfg).Elem(), "", nil)
+
+	args := []string{"--flags", "true,false,true"}
+
+	if err := applyFlags(&cfg, fields, args); err != nil {
+		t.Fatalf("applyFlags: unexpected error: %v", err)
+	}
+
+	want := []bool{true, false, true}
+	if !reflect.DeepEqual(cfg.Flags, want) {
+		t.Errorf("Flags = %v, want %v", cfg.Flags, want)
+	}
+}
+
+func TestSlice_DurationPriorityChain(t *testing.T) {
+	type Config struct {
+		Timeouts []time.Duration `default:"1s,2s"`
+	}
+
+	var cfg Config
+	fields := extractFields(reflect.ValueOf(&cfg).Elem(), "", nil)
+
+	// Step 1: defaults
+	if err := applyDefaults(&cfg, fields); err != nil {
+		t.Fatalf("applyDefaults: unexpected error: %v", err)
+	}
+	want := []time.Duration{time.Second, 2 * time.Second}
+	if !reflect.DeepEqual(cfg.Timeouts, want) {
+		t.Fatalf("after defaults: Timeouts = %v, want %v", cfg.Timeouts, want)
+	}
+
+	// Step 2: file overrides defaults
+	data := map[string]any{
+		"timeouts": []any{"5s", "10s"},
+	}
+	if err := applyMap(&cfg, data, fields); err != nil {
+		t.Fatalf("applyMap: unexpected error: %v", err)
+	}
+	want = []time.Duration{5 * time.Second, 10 * time.Second}
+	if !reflect.DeepEqual(cfg.Timeouts, want) {
+		t.Fatalf("after file: Timeouts = %v, want %v", cfg.Timeouts, want)
+	}
+
+	// Step 3: env overrides file
+	t.Setenv("TIMEOUTS", "30s,1m")
+	if err := applyEnv(&cfg, fields, ""); err != nil {
+		t.Fatalf("applyEnv: unexpected error: %v", err)
+	}
+	want = []time.Duration{30 * time.Second, time.Minute}
+	if !reflect.DeepEqual(cfg.Timeouts, want) {
+		t.Fatalf("after env: Timeouts = %v, want %v", cfg.Timeouts, want)
+	}
+
+	// Step 4: flags override env
+	args := []string{"--timeouts", "2m,3m"}
+	if err := applyFlags(&cfg, fields, args); err != nil {
+		t.Fatalf("applyFlags: unexpected error: %v", err)
+	}
+	want = []time.Duration{2 * time.Minute, 3 * time.Minute}
+	if !reflect.DeepEqual(cfg.Timeouts, want) {
+		t.Fatalf("after flags: Timeouts = %v, want %v", cfg.Timeouts, want)
+	}
+}
+
 func TestLoadFile_UnsupportedFormat(t *testing.T) {
 	type Config struct {
 		Host string

@@ -59,6 +59,8 @@ func setFieldValue(field reflect.Value, raw string) error {
 }
 
 // setSliceValue parses a comma-separated string into a slice field.
+// Each element is delegated to setFieldValue, so any scalar type supported
+// by setFieldValue automatically works as a slice element.
 func setSliceValue(field reflect.Value, raw string, typ reflect.Type) error {
 	if raw == "" {
 		field.Set(reflect.MakeSlice(typ, 0, 0))
@@ -66,42 +68,15 @@ func setSliceValue(field reflect.Value, raw string, typ reflect.Type) error {
 	}
 
 	parts := strings.Split(raw, ",")
-	elemKind := typ.Elem().Kind()
+	slice := reflect.MakeSlice(typ, len(parts), len(parts))
 
-	switch elemKind {
-	case reflect.String:
-		slice := make([]string, len(parts))
-		for i, p := range parts {
-			slice[i] = strings.TrimSpace(p)
+	for i, p := range parts {
+		if err := setFieldValue(slice.Index(i), strings.TrimSpace(p)); err != nil {
+			return fmt.Errorf("slice element %d: %w", i, err)
 		}
-		field.Set(reflect.ValueOf(slice))
-
-	case reflect.Int:
-		slice := make([]int, len(parts))
-		for i, p := range parts {
-			v, err := strconv.Atoi(strings.TrimSpace(p))
-			if err != nil {
-				return fmt.Errorf("cannot parse %q as int in slice element %d: %w", p, i, err)
-			}
-			slice[i] = v
-		}
-		field.Set(reflect.ValueOf(slice))
-
-	case reflect.Float64:
-		slice := make([]float64, len(parts))
-		for i, p := range parts {
-			v, err := strconv.ParseFloat(strings.TrimSpace(p), 64)
-			if err != nil {
-				return fmt.Errorf("cannot parse %q as float64 in slice element %d: %w", p, i, err)
-			}
-			slice[i] = v
-		}
-		field.Set(reflect.ValueOf(slice))
-
-	default:
-		return fmt.Errorf("unsupported slice element type %s", elemKind)
 	}
 
+	field.Set(slice)
 	return nil
 }
 

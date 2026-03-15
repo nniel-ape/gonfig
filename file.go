@@ -237,72 +237,23 @@ func setFloatFromAny(field reflect.Value, val any) error {
 }
 
 // setSliceFromAny converts a []any from a file decoder into a typed slice.
+// Each element is delegated to setFieldFromAny, so any scalar type supported
+// by setFieldFromAny automatically works as a slice element.
 func setSliceFromAny(field reflect.Value, val any, typ reflect.Type) error {
 	arr, ok := val.([]any)
 	if !ok {
 		return fmt.Errorf("expected array, got %T", val)
 	}
 
-	elemKind := typ.Elem().Kind()
-	switch elemKind {
-	case reflect.String:
-		return setStringSliceFromAny(field, arr)
-	case reflect.Int:
-		return setIntSliceFromAny(field, arr)
-	case reflect.Float64:
-		return setFloatSliceFromAny(field, arr)
-	default:
-		return fmt.Errorf("unsupported slice element type %s", elemKind)
-	}
-}
+	slice := reflect.MakeSlice(typ, len(arr), len(arr))
 
-// setStringSliceFromAny converts a []any into a []string and sets the field.
-func setStringSliceFromAny(field reflect.Value, arr []any) error {
-	slice := make([]string, len(arr))
 	for i, elem := range arr {
-		s, ok := elem.(string)
-		if !ok {
-			return fmt.Errorf("expected string in array element %d, got %T", i, elem)
-		}
-		slice[i] = s
-	}
-	field.Set(reflect.ValueOf(slice))
-	return nil
-}
-
-// setIntSliceFromAny converts a []any into a []int and sets the field.
-func setIntSliceFromAny(field reflect.Value, arr []any) error {
-	slice := make([]int, len(arr))
-	for i, elem := range arr {
-		n, err := anyToInt64(elem)
-		if err != nil {
+		if err := setFieldFromAny(slice.Index(i), elem); err != nil {
 			return fmt.Errorf("array element %d: %w", i, err)
 		}
-		if n > int64(math.MaxInt) || n < int64(math.MinInt) {
-			return fmt.Errorf("cannot convert %v to integer in array element %d: value out of range", elem, i)
-		}
-		slice[i] = int(n)
 	}
-	field.Set(reflect.ValueOf(slice))
-	return nil
-}
 
-// setFloatSliceFromAny converts a []any into a []float64 and sets the field.
-func setFloatSliceFromAny(field reflect.Value, arr []any) error {
-	slice := make([]float64, len(arr))
-	for i, elem := range arr {
-		switch v := elem.(type) {
-		case float64:
-			slice[i] = v
-		case int:
-			slice[i] = float64(v)
-		case int64:
-			slice[i] = float64(v)
-		default:
-			return fmt.Errorf("expected number in array element %d, got %T", i, elem)
-		}
-	}
-	field.Set(reflect.ValueOf(slice))
+	field.Set(slice)
 	return nil
 }
 

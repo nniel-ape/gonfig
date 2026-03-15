@@ -283,6 +283,116 @@ func TestSetFieldValue_Float64Slice(t *testing.T) {
 	}
 }
 
+func TestSetFieldValue_DurationSlice(t *testing.T) {
+	tests := []struct {
+		name    string
+		raw     string
+		want    []time.Duration
+		wantErr bool
+	}{
+		{"multiple", "5s,10s,1m", []time.Duration{5 * time.Second, 10 * time.Second, time.Minute}, false},
+		{"with spaces", "100ms, 2m30s, 1h", []time.Duration{100 * time.Millisecond, 2*time.Minute + 30*time.Second, time.Hour}, false},
+		{"compound", "1h30m,500us,2h45m30s", []time.Duration{time.Hour + 30*time.Minute, 500 * time.Microsecond, 2*time.Hour + 45*time.Minute + 30*time.Second}, false},
+		{"single", "30s", []time.Duration{30 * time.Second}, false},
+		{"empty", "", []time.Duration{}, false},
+		{"negative", "-5s,10s", []time.Duration{-5 * time.Second, 10 * time.Second}, false},
+		{"invalid element", "5s,invalid,10s", nil, true},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var s []time.Duration
+			v := reflect.ValueOf(&s).Elem()
+			err := setFieldValue(v, tt.raw)
+			if tt.wantErr {
+				if err == nil {
+					t.Fatal("expected error, got nil")
+				}
+				return
+			}
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+			if !reflect.DeepEqual(s, tt.want) {
+				t.Errorf("got %v, want %v", s, tt.want)
+			}
+		})
+	}
+}
+
+func TestSetFieldValue_BoolSlice(t *testing.T) {
+	tests := []struct {
+		name    string
+		raw     string
+		want    []bool
+		wantErr bool
+	}{
+		{"basic", "true,false,true", []bool{true, false, true}, false},
+		{"numeric", "1,0,1", []bool{true, false, true}, false},
+		{"mixed formats", "1,0,true,false,T,F", []bool{true, false, true, false, true, false}, false},
+		{"with spaces", "true, false, true", []bool{true, false, true}, false},
+		{"single", "true", []bool{true}, false},
+		{"empty", "", []bool{}, false},
+		{"invalid element", "true,notbool,false", nil, true},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var s []bool
+			v := reflect.ValueOf(&s).Elem()
+			err := setFieldValue(v, tt.raw)
+			if tt.wantErr {
+				if err == nil {
+					t.Fatal("expected error, got nil")
+				}
+				return
+			}
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+			if !reflect.DeepEqual(s, tt.want) {
+				t.Errorf("got %v, want %v", s, tt.want)
+			}
+		})
+	}
+}
+
+func TestSetFieldValue_Int64Slice(t *testing.T) {
+	tests := []struct {
+		name    string
+		raw     string
+		want    []int64
+		wantErr bool
+	}{
+		{"basic", "100,200,300", []int64{100, 200, 300}, false},
+		{"large values", "2147483648,-2147483649", []int64{2147483648, -2147483649}, false},
+		{"with spaces", "1, 2, 3", []int64{1, 2, 3}, false},
+		{"single", "42", []int64{42}, false},
+		{"empty", "", []int64{}, false},
+		{"invalid element", "100,abc,300", nil, true},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var s []int64
+			v := reflect.ValueOf(&s).Elem()
+			err := setFieldValue(v, tt.raw)
+			if tt.wantErr {
+				if err == nil {
+					t.Fatal("expected error, got nil")
+				}
+				return
+			}
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+			if !reflect.DeepEqual(s, tt.want) {
+				t.Errorf("got %v, want %v", s, tt.want)
+			}
+		})
+	}
+}
+
 func TestSetFieldValue_UnsupportedType(t *testing.T) {
 	var c complex128
 	v := reflect.ValueOf(&c).Elem()
