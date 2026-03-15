@@ -319,6 +319,50 @@ func TestLoad_MultipleFiles_LaterOverridesEarlier(t *testing.T) {
 	}
 }
 
+func TestLoad_InterleavedFileContentAndFile_PreservesOrder(t *testing.T) {
+	dir := t.TempDir()
+
+	// File sets db.host to "fromfile"
+	cfgFile := filepath.Join(dir, "config.json")
+	if err := os.WriteFile(cfgFile, []byte(`{"db":{"host":"fromfile"}}`), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	// Inline content is specified first, file second — file should win (later overrides earlier).
+	contentData := []byte(`{"db":{"host":"frominline"}}`)
+	var cfg testConfig
+	err := Load(&cfg, WithFileContent(contentData, JSON), WithFile(cfgFile))
+	if err != nil {
+		t.Fatalf("Load() error: %v", err)
+	}
+
+	if cfg.DB.Host != "fromfile" {
+		t.Errorf("DB.Host = %q, want %q (WithFile specified after WithFileContent should win)", cfg.DB.Host, "fromfile")
+	}
+}
+
+func TestLoad_InterleavedFileAndFileContent_PreservesOrder(t *testing.T) {
+	dir := t.TempDir()
+
+	// File sets db.host to "fromfile"
+	cfgFile := filepath.Join(dir, "config.json")
+	if err := os.WriteFile(cfgFile, []byte(`{"db":{"host":"fromfile"}}`), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	// File is specified first, inline content second — inline should win (later overrides earlier).
+	contentData := []byte(`{"db":{"host":"frominline"}}`)
+	var cfg testConfig
+	err := Load(&cfg, WithFile(cfgFile), WithFileContent(contentData, JSON))
+	if err != nil {
+		t.Fatalf("Load() error: %v", err)
+	}
+
+	if cfg.DB.Host != "frominline" {
+		t.Errorf("DB.Host = %q, want %q (WithFileContent specified after WithFile should win)", cfg.DB.Host, "frominline")
+	}
+}
+
 func TestLoad_InvalidEnvValue(t *testing.T) {
 	t.Setenv("DB_PORT", "not-a-number")
 

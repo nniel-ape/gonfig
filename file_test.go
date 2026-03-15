@@ -1,6 +1,7 @@
 package gonfig
 
 import (
+	"math"
 	"reflect"
 	"strings"
 	"testing"
@@ -81,6 +82,16 @@ func TestSetFieldFromAny(t *testing.T) {
 		{"bool true", reflect.TypeFor[bool](), true, true, false},
 		{"bool false", reflect.TypeFor[bool](), false, false, false},
 		{"duration", reflect.TypeFor[time.Duration](), "5s", 5 * time.Second, false},
+		{"int from non-integral float64", reflect.TypeFor[int](), float64(3.9), nil, true},
+		{"int64 from non-integral float64", reflect.TypeFor[int64](), float64(99.5), nil, true},
+		{"int from +Inf", reflect.TypeFor[int](), math.Inf(1), nil, true},
+		{"int from -Inf", reflect.TypeFor[int](), math.Inf(-1), nil, true},
+		{"int from NaN", reflect.TypeFor[int](), math.NaN(), nil, true},
+		{"int64 from +Inf", reflect.TypeFor[int64](), math.Inf(1), nil, true},
+		{"int from overflow", reflect.TypeFor[int](), float64(1e20), nil, true},
+		{"int64 from overflow", reflect.TypeFor[int64](), float64(1e20), nil, true},
+		{"int64 from negative overflow", reflect.TypeFor[int64](), float64(-1e20), nil, true},
+		{"int64 from boundary overflow 2^63", reflect.TypeFor[int64](), math.Exp2(63), nil, true},
 		{"string type mismatch", reflect.TypeFor[string](), 42, nil, true},
 		{"int type mismatch", reflect.TypeFor[int](), "not a number", nil, true},
 		{"bool type mismatch", reflect.TypeFor[bool](), "not a bool", nil, true},
@@ -853,6 +864,35 @@ func TestApplyMap_SingleElementSlice(t *testing.T) {
 	}
 	if !reflect.DeepEqual(cfg.Ports, []int{8080}) {
 		t.Errorf("Ports = %v, want [8080]", cfg.Ports)
+	}
+}
+
+func TestSetSliceFromAny_IntNonIntegralFloat64(t *testing.T) {
+	field := reflect.New(reflect.TypeFor[[]int]()).Elem()
+	err := setSliceFromAny(field, []any{float64(1), float64(2.5)}, field.Type())
+	if err == nil {
+		t.Fatal("expected error for non-integral float64 in int slice")
+	}
+}
+
+func TestSetSliceFromAny_IntNonFiniteFloat64(t *testing.T) {
+	tests := []struct {
+		name string
+		val  float64
+	}{
+		{"+Inf", math.Inf(1)},
+		{"-Inf", math.Inf(-1)},
+		{"NaN", math.NaN()},
+		{"overflow", 1e20},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			field := reflect.New(reflect.TypeFor[[]int]()).Elem()
+			err := setSliceFromAny(field, []any{tt.val}, field.Type())
+			if err == nil {
+				t.Fatalf("expected error for %s in int slice", tt.name)
+			}
+		})
 	}
 }
 

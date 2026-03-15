@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"math"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -34,7 +35,7 @@ func loadFile(target any, path string, fields []fieldInfo) error {
 	if err != nil {
 		return fmt.Errorf("open config file: %w", err)
 	}
-	defer f.Close()
+	defer func() { _ = f.Close() }()
 
 	data, err := decodeByFormat(f, format)
 	if err != nil {
@@ -160,10 +161,26 @@ func setFieldFromAny(field reflect.Value, val any) error {
 	case reflect.Int, reflect.Int64:
 		switch v := val.(type) {
 		case float64:
-			field.SetInt(int64(v))
+			if math.IsNaN(v) || math.IsInf(v, 0) {
+				return fmt.Errorf("cannot convert %v to integer: value is not finite", v)
+			}
+			if v != math.Trunc(v) {
+				return fmt.Errorf("cannot convert %v to integer: value is not integral", v)
+			}
+			if v >= 1<<63 || v < -(1 << 63) {
+				return fmt.Errorf("cannot convert %v to integer: value out of range", v)
+			}
+			n := int64(v)
+			if typ.Kind() == reflect.Int && (n > int64(math.MaxInt) || n < int64(math.MinInt)) {
+				return fmt.Errorf("cannot convert %v to int: value out of range", v)
+			}
+			field.SetInt(n)
 		case int:
 			field.SetInt(int64(v))
 		case int64:
+			if typ.Kind() == reflect.Int && (v > int64(math.MaxInt) || v < int64(math.MinInt)) {
+				return fmt.Errorf("cannot convert %v to int: value out of range", v)
+			}
 			field.SetInt(v)
 		default:
 			return fmt.Errorf("expected number for %s, got %T", typ.Kind(), val)
@@ -226,10 +243,26 @@ func setSliceFromAny(field reflect.Value, val any, typ reflect.Type) error {
 		for i, elem := range arr {
 			switch v := elem.(type) {
 			case float64:
-				slice[i] = int(v)
+				if math.IsNaN(v) || math.IsInf(v, 0) {
+					return fmt.Errorf("cannot convert %v to integer in array element %d: value is not finite", v, i)
+				}
+				if v != math.Trunc(v) {
+					return fmt.Errorf("cannot convert %v to integer in array element %d: value is not integral", v, i)
+				}
+				if v >= 1<<63 || v < -(1 << 63) {
+					return fmt.Errorf("cannot convert %v to integer in array element %d: value out of range", v, i)
+				}
+				n := int64(v)
+				if n > int64(math.MaxInt) || n < int64(math.MinInt) {
+					return fmt.Errorf("cannot convert %v to integer in array element %d: value out of range", v, i)
+				}
+				slice[i] = int(n)
 			case int:
 				slice[i] = v
 			case int64:
+				if v > int64(math.MaxInt) || v < int64(math.MinInt) {
+					return fmt.Errorf("cannot convert %v to integer in array element %d: value out of range", v, i)
+				}
 				slice[i] = int(v)
 			default:
 				return fmt.Errorf("expected number in array element %d, got %T", i, elem)

@@ -43,15 +43,16 @@ type Option func(*options)
 
 type options struct {
 	envPrefix   string
-	filePaths   []string
-	fileContent []fileContentSource
+	fileSources []fileSource
 	flagArgs    []string
 	hasFlags    bool
 }
 
-type fileContentSource struct {
-	data   []byte
-	format Format
+// fileSource represents either a file path or inline content, preserving caller order.
+type fileSource struct {
+	path   string // non-empty for WithFile
+	data   []byte // non-nil for WithFileContent
+	format Format // used for WithFileContent
 }
 
 // WithEnvPrefix sets a prefix for environment variable lookups.
@@ -66,7 +67,7 @@ func WithEnvPrefix(prefix string) Option {
 // Multiple files can be specified; they are loaded in order (later files override earlier ones).
 func WithFile(path string) Option {
 	return func(o *options) {
-		o.filePaths = append(o.filePaths, path)
+		o.fileSources = append(o.fileSources, fileSource{path: path})
 	}
 }
 
@@ -82,7 +83,7 @@ func WithFlags(args []string) Option {
 // This is useful for testing or embedding config data.
 func WithFileContent(data []byte, format Format) Option {
 	return func(o *options) {
-		o.fileContent = append(o.fileContent, fileContentSource{data: data, format: format})
+		o.fileSources = append(o.fileSources, fileSource{data: data, format: format})
 	}
 }
 
@@ -115,20 +116,19 @@ func Load(target any, opts ...Option) error {
 		return fmt.Errorf("%w: %v", ErrParse, err)
 	}
 
-	// 2. Apply file sources.
-	for _, path := range o.filePaths {
-		if err := loadFile(target, path, fields); err != nil {
-			if isFileNotFound(err) {
-				return fmt.Errorf("%w: %v", ErrFileNotFound, err)
+	// 2. Apply file sources in caller order.
+	for _, fs := range o.fileSources {
+		if fs.path != "" {
+			if err := loadFile(target, fs.path, fields); err != nil {
+				if isFileNotFound(err) {
+					return fmt.Errorf("%w: %v", ErrFileNotFound, err)
+				}
+				return fmt.Errorf("%w: %v", ErrParse, err)
 			}
-			return fmt.Errorf("%w: %v", ErrParse, err)
-		}
-	}
-
-	// 2b. Apply inline file content sources.
-	for _, fc := range o.fileContent {
-		if err := loadFileContent(target, fc.data, fc.format, fields); err != nil {
-			return fmt.Errorf("%w: %v", ErrParse, err)
+		} else {
+			if err := loadFileContent(target, fs.data, fs.format, fields); err != nil {
+				return fmt.Errorf("%w: %v", ErrParse, err)
+			}
 		}
 	}
 
