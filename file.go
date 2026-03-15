@@ -91,7 +91,8 @@ func decodeTOML(r io.Reader) (map[string]any, error) {
 func applyMap(target any, data map[string]any, fields []fieldInfo) error {
 	v := reflect.ValueOf(target).Elem()
 
-	for _, fi := range fields {
+	for i := range fields {
+		fi := &fields[i]
 		val, ok := lookupMap(data, fi.ConfigKey)
 		if !ok {
 			continue
@@ -159,44 +160,10 @@ func setFieldFromAny(field reflect.Value, val any) error {
 		field.SetString(s)
 
 	case reflect.Int, reflect.Int64:
-		switch v := val.(type) {
-		case float64:
-			if math.IsNaN(v) || math.IsInf(v, 0) {
-				return fmt.Errorf("cannot convert %v to integer: value is not finite", v)
-			}
-			if v != math.Trunc(v) {
-				return fmt.Errorf("cannot convert %v to integer: value is not integral", v)
-			}
-			if v >= 1<<63 || v < -(1<<63) {
-				return fmt.Errorf("cannot convert %v to integer: value out of range", v)
-			}
-			n := int64(v)
-			if typ.Kind() == reflect.Int && (n > int64(math.MaxInt) || n < int64(math.MinInt)) {
-				return fmt.Errorf("cannot convert %v to int: value out of range", v)
-			}
-			field.SetInt(n)
-		case int:
-			field.SetInt(int64(v))
-		case int64:
-			if typ.Kind() == reflect.Int && (v > int64(math.MaxInt) || v < int64(math.MinInt)) {
-				return fmt.Errorf("cannot convert %v to int: value out of range", v)
-			}
-			field.SetInt(v)
-		default:
-			return fmt.Errorf("expected number for %s, got %T", typ.Kind(), val)
-		}
+		return setIntFromAny(field, val, typ)
 
 	case reflect.Float64:
-		switch v := val.(type) {
-		case float64:
-			field.SetFloat(v)
-		case int:
-			field.SetFloat(float64(v))
-		case int64:
-			field.SetFloat(float64(v))
-		default:
-			return fmt.Errorf("expected number for float64, got %T", val)
-		}
+		return setFloatFromAny(field, val)
 
 	case reflect.Bool:
 		b, ok := val.(bool)
@@ -218,6 +185,57 @@ func setFieldFromAny(field reflect.Value, val any) error {
 	return nil
 }
 
+// setIntFromAny sets an int or int64 field from a decoded file value.
+func setIntFromAny(field reflect.Value, val any, typ reflect.Type) error {
+	n, err := anyToInt64(val)
+	if err != nil {
+		return fmt.Errorf("expected number for %s, got %T", typ.Kind(), val)
+	}
+	if typ.Kind() == reflect.Int && (n > int64(math.MaxInt) || n < int64(math.MinInt)) {
+		return fmt.Errorf("cannot convert %v to int: value out of range", val)
+	}
+	field.SetInt(n)
+	return nil
+}
+
+// anyToInt64 converts a decoded file value (float64, int, int64) to int64.
+func anyToInt64(val any) (int64, error) {
+	switch v := val.(type) {
+	case float64:
+		if math.IsNaN(v) || math.IsInf(v, 0) {
+			return 0, fmt.Errorf("cannot convert %v to integer: value is not finite", v)
+		}
+		if v != math.Trunc(v) {
+			return 0, fmt.Errorf("cannot convert %v to integer: value is not integral", v)
+		}
+		if v >= 1<<63 || v < -(1<<63) {
+			return 0, fmt.Errorf("cannot convert %v to integer: value out of range", v)
+		}
+		return int64(v), nil
+	case int:
+		return int64(v), nil
+	case int64:
+		return v, nil
+	default:
+		return 0, fmt.Errorf("expected number, got %T", val)
+	}
+}
+
+// setFloatFromAny sets a float64 field from a decoded file value.
+func setFloatFromAny(field reflect.Value, val any) error {
+	switch v := val.(type) {
+	case float64:
+		field.SetFloat(v)
+	case int:
+		field.SetFloat(float64(v))
+	case int64:
+		field.SetFloat(float64(v))
+	default:
+		return fmt.Errorf("expected number for float64, got %T", val)
+	}
+	return nil
+}
+
 // setSliceFromAny converts a []any from a file decoder into a typed slice.
 func setSliceFromAny(field reflect.Value, val any, typ reflect.Type) error {
 	arr, ok := val.([]any)
@@ -228,68 +246,63 @@ func setSliceFromAny(field reflect.Value, val any, typ reflect.Type) error {
 	elemKind := typ.Elem().Kind()
 	switch elemKind {
 	case reflect.String:
-		slice := make([]string, len(arr))
-		for i, elem := range arr {
-			s, ok := elem.(string)
-			if !ok {
-				return fmt.Errorf("expected string in array element %d, got %T", i, elem)
-			}
-			slice[i] = s
-		}
-		field.Set(reflect.ValueOf(slice))
-
+		return setStringSliceFromAny(field, arr)
 	case reflect.Int:
-		slice := make([]int, len(arr))
-		for i, elem := range arr {
-			switch v := elem.(type) {
-			case float64:
-				if math.IsNaN(v) || math.IsInf(v, 0) {
-					return fmt.Errorf("cannot convert %v to integer in array element %d: value is not finite", v, i)
-				}
-				if v != math.Trunc(v) {
-					return fmt.Errorf("cannot convert %v to integer in array element %d: value is not integral", v, i)
-				}
-				if v >= 1<<63 || v < -(1<<63) {
-					return fmt.Errorf("cannot convert %v to integer in array element %d: value out of range", v, i)
-				}
-				n := int64(v)
-				if n > int64(math.MaxInt) || n < int64(math.MinInt) {
-					return fmt.Errorf("cannot convert %v to integer in array element %d: value out of range", v, i)
-				}
-				slice[i] = int(n)
-			case int:
-				slice[i] = v
-			case int64:
-				if v > int64(math.MaxInt) || v < int64(math.MinInt) {
-					return fmt.Errorf("cannot convert %v to integer in array element %d: value out of range", v, i)
-				}
-				slice[i] = int(v)
-			default:
-				return fmt.Errorf("expected number in array element %d, got %T", i, elem)
-			}
-		}
-		field.Set(reflect.ValueOf(slice))
-
+		return setIntSliceFromAny(field, arr)
 	case reflect.Float64:
-		slice := make([]float64, len(arr))
-		for i, elem := range arr {
-			switch v := elem.(type) {
-			case float64:
-				slice[i] = v
-			case int:
-				slice[i] = float64(v)
-			case int64:
-				slice[i] = float64(v)
-			default:
-				return fmt.Errorf("expected number in array element %d, got %T", i, elem)
-			}
-		}
-		field.Set(reflect.ValueOf(slice))
-
+		return setFloatSliceFromAny(field, arr)
 	default:
 		return fmt.Errorf("unsupported slice element type %s", elemKind)
 	}
+}
 
+// setStringSliceFromAny converts a []any into a []string and sets the field.
+func setStringSliceFromAny(field reflect.Value, arr []any) error {
+	slice := make([]string, len(arr))
+	for i, elem := range arr {
+		s, ok := elem.(string)
+		if !ok {
+			return fmt.Errorf("expected string in array element %d, got %T", i, elem)
+		}
+		slice[i] = s
+	}
+	field.Set(reflect.ValueOf(slice))
+	return nil
+}
+
+// setIntSliceFromAny converts a []any into a []int and sets the field.
+func setIntSliceFromAny(field reflect.Value, arr []any) error {
+	slice := make([]int, len(arr))
+	for i, elem := range arr {
+		n, err := anyToInt64(elem)
+		if err != nil {
+			return fmt.Errorf("array element %d: %w", i, err)
+		}
+		if n > int64(math.MaxInt) || n < int64(math.MinInt) {
+			return fmt.Errorf("cannot convert %v to integer in array element %d: value out of range", elem, i)
+		}
+		slice[i] = int(n)
+	}
+	field.Set(reflect.ValueOf(slice))
+	return nil
+}
+
+// setFloatSliceFromAny converts a []any into a []float64 and sets the field.
+func setFloatSliceFromAny(field reflect.Value, arr []any) error {
+	slice := make([]float64, len(arr))
+	for i, elem := range arr {
+		switch v := elem.(type) {
+		case float64:
+			slice[i] = v
+		case int:
+			slice[i] = float64(v)
+		case int64:
+			slice[i] = float64(v)
+		default:
+			return fmt.Errorf("expected number in array element %d, got %T", i, elem)
+		}
+	}
+	field.Set(reflect.ValueOf(slice))
 	return nil
 }
 

@@ -10,7 +10,8 @@ import (
 func applyDefaults(target any, fields []fieldInfo) error {
 	v := reflect.ValueOf(target).Elem()
 
-	for _, fi := range fields {
+	for i := range fields {
+		fi := &fields[i]
 		if !fi.HasDefault {
 			continue
 		}

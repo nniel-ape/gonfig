@@ -13,7 +13,8 @@ import (
 func applyEnv(target any, fields []fieldInfo, prefix string) error {
 	v := reflect.ValueOf(target).Elem()
 
-	for _, fi := range fields {
+	for i := range fields {
+		fi := &fields[i]
 		envName := fi.EnvName
 		if prefix != "" {
 			envName = prefix + "_" + fi.EnvName

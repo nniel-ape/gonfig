@@ -73,7 +73,7 @@ func buildSections(t reflect.Type, fields []fieldInfo, envPrefix string) []secti
 		if !sf.IsExported() {
 			continue
 		}
-		if sf.Type.Kind() == reflect.Struct && sf.Type.PkgPath() != "time" {
+		if sf.Type.Kind() == reflect.Struct && sf.Type.PkgPath() != timePkgPath {
 			sectionOrder = append(sectionOrder, sf.Name)
 			sectionSet[sf.Name] = true
 		}
@@ -83,7 +83,8 @@ func buildSections(t reflect.Type, fields []fieldInfo, envPrefix string) []secti
 	rootEntries := []usageEntry{}
 	sectionEntries := make(map[string][]usageEntry)
 
-	for _, fi := range fields {
+	for i := range fields {
+		fi := &fields[i]
 		entry := fieldToEntry(fi, envPrefix)
 
 		// Check if this field belongs to a section.
@@ -113,7 +114,7 @@ func buildSections(t reflect.Type, fields []fieldInfo, envPrefix string) []secti
 }
 
 // fieldToEntry converts a fieldInfo into a usageEntry.
-func fieldToEntry(fi fieldInfo, envPrefix string) usageEntry {
+func fieldToEntry(fi *fieldInfo, envPrefix string) usageEntry {
 	envName := fi.EnvName
 	if envPrefix != "" {
 		envName = envPrefix + "_" + envName
@@ -141,7 +142,7 @@ func friendlyTypeName(t reflect.Type) string {
 	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32:
 		return "int"
 	case reflect.Int64:
-		if t.PkgPath() == "time" && t.Name() == "Duration" {
+		if t.PkgPath() == timePkgPath && t.Name() == "Duration" {
 			return "duration"
 		}
 		return "int"
@@ -164,22 +165,7 @@ func writeSection(b *strings.Builder, entries []usageEntry) {
 		return
 	}
 
-	// Check if any entry in this section has a short flag prefix ("-X, ").
-	// If so, pad entries without short flags so the "--" aligns.
-	hasShort := false
-	for _, e := range entries {
-		if strings.HasPrefix(e.flag, "-") && strings.Contains(e.flag, ", --") {
-			hasShort = true
-			break
-		}
-	}
-	if hasShort {
-		for i, e := range entries {
-			if !strings.HasPrefix(e.flag, "-") || !strings.Contains(e.flag, ", --") {
-				entries[i].flag = "    " + e.flag
-			}
-		}
-	}
+	alignShortFlags(entries)
 
 	// Calculate column widths.
 	var maxFlag, maxEnv, maxType, maxDefault int
@@ -212,6 +198,25 @@ func writeSection(b *strings.Builder, entries []usageEntry) {
 		}
 		b.WriteString(strings.TrimRight(line, " "))
 		b.WriteString("\n")
+	}
+}
+
+// alignShortFlags pads flag entries so "--" columns align when some entries have short flags.
+func alignShortFlags(entries []usageEntry) {
+	hasShort := false
+	for _, e := range entries {
+		if strings.HasPrefix(e.flag, "-") && strings.Contains(e.flag, ", --") {
+			hasShort = true
+			break
+		}
+	}
+	if !hasShort {
+		return
+	}
+	for i, e := range entries {
+		if !strings.HasPrefix(e.flag, "-") || !strings.Contains(e.flag, ", --") {
+			entries[i].flag = "    " + e.flag
+		}
 	}
 }
 

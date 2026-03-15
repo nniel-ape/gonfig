@@ -32,6 +32,7 @@ var (
 // Format specifies a config file format for use with WithFileContent.
 type Format string
 
+// Format constants for supported config file types.
 const (
 	JSON Format = "json"
 	YAML Format = "yaml"
@@ -53,7 +54,7 @@ type options struct {
 // osExit and printFn are package-level vars to allow testing of auto-help behavior.
 var (
 	osExit  = os.Exit
-	printFn = func(s string) { fmt.Print(s) }
+	printFn = func(s string) { _, _ = os.Stdout.WriteString(s) }
 )
 
 // fileSource represents either a file path or inline content, preserving caller order.
@@ -142,19 +143,8 @@ func Load(target any, opts ...Option) error {
 	}
 
 	// 2. Apply file sources in caller order.
-	for _, fs := range o.fileSources {
-		if fs.path != "" {
-			if err := loadFile(target, fs.path, fields); err != nil {
-				if isFileNotFound(err) {
-					return fmt.Errorf("%w: %w", ErrFileNotFound, err)
-				}
-				return fmt.Errorf("%w: %w", ErrParse, err)
-			}
-		} else {
-			if err := loadFileContent(target, fs.data, fs.format, fields); err != nil {
-				return fmt.Errorf("%w: %w", ErrParse, err)
-			}
-		}
+	if err := applyFileSources(target, o.fileSources, fields); err != nil {
+		return err
 	}
 
 	// 3. Apply environment variables.
@@ -164,16 +154,8 @@ func Load(target any, opts ...Option) error {
 
 	// 4. Apply flags.
 	if o.hasFlags {
-		if err := applyFlags(target, fields, o.flagArgs); err != nil {
-			if errors.Is(err, flag.ErrHelp) {
-				if o.disableAutoHelp {
-					return err
-				}
-				printFn(Usage(target, opts...))
-				osExit(0)
-				return nil
-			}
-			return fmt.Errorf("%w: %w", ErrParse, err)
+		if err := handleFlags(target, &o, fields, opts); err != nil {
+			return err
 		}
 	}
 
@@ -185,6 +167,50 @@ func Load(target any, opts ...Option) error {
 	}
 
 	return nil
+}
+
+// applyFileSources loads each file source in order and applies it to the target struct.
+func applyFileSources(target any, sources []fileSource, fields []fieldInfo) error {
+	for i := range sources {
+		if err := applyFileSource(target, &sources[i], fields); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// applyFileSource loads a single file source and applies it to the target struct.
+func applyFileSource(target any, fs *fileSource, fields []fieldInfo) error {
+	if fs.path == "" {
+		if err := loadFileContent(target, fs.data, fs.format, fields); err != nil {
+			return fmt.Errorf("%w: %w", ErrParse, err)
+		}
+		return nil
+	}
+	if err := loadFile(target, fs.path, fields); err != nil {
+		if isFileNotFound(err) {
+			return fmt.Errorf("%w: %w", ErrFileNotFound, err)
+		}
+		return fmt.Errorf("%w: %w", ErrParse, err)
+	}
+	return nil
+}
+
+// handleFlags parses and applies flags, handling auto-help if enabled.
+func handleFlags(target any, o *options, fields []fieldInfo, opts []Option) error {
+	err := applyFlags(target, fields, o.flagArgs)
+	if err == nil {
+		return nil
+	}
+	if errors.Is(err, flag.ErrHelp) {
+		if o.disableAutoHelp {
+			return err
+		}
+		printFn(Usage(target, opts...))
+		osExit(0)
+		return nil
+	}
+	return fmt.Errorf("%w: %w", ErrParse, err)
 }
 
 // loadFileContent decodes config from raw bytes with the given format and applies it to target.

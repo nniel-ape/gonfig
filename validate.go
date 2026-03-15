@@ -45,7 +45,8 @@ func validate(target any, fields []fieldInfo) error {
 	rv := reflect.ValueOf(target).Elem()
 	var errs []FieldError
 
-	for _, fi := range fields {
+	for i := range fields {
+		fi := &fields[i]
 		if fi.ValidateRules == "" {
 			continue
 		}
@@ -73,7 +74,7 @@ func validate(target any, fields []fieldInfo) error {
 
 // checkRule evaluates a single validation rule against a field value.
 // Returns the FieldError and false if validation fails.
-func checkRule(fi fieldInfo, fv reflect.Value, rule string) (FieldError, bool) {
+func checkRule(fi *fieldInfo, fv reflect.Value, rule string) (FieldError, bool) {
 	switch {
 	case rule == "required":
 		return checkRequired(fi, fv)
@@ -93,7 +94,7 @@ func checkRule(fi fieldInfo, fv reflect.Value, rule string) (FieldError, bool) {
 }
 
 // checkRequired verifies the field is not the zero value for its type.
-func checkRequired(fi fieldInfo, fv reflect.Value) (FieldError, bool) {
+func checkRequired(fi *fieldInfo, fv reflect.Value) (FieldError, bool) {
 	if fv.IsZero() {
 		return FieldError{
 			Field:   fi.Path,
@@ -105,7 +106,7 @@ func checkRequired(fi fieldInfo, fv reflect.Value) (FieldError, bool) {
 }
 
 // checkMin verifies numeric fields are >= the minimum value.
-func checkMin(fi fieldInfo, fv reflect.Value, rule string) (FieldError, bool) {
+func checkMin(fi *fieldInfo, fv reflect.Value, rule string) (FieldError, bool) {
 	boundStr := strings.TrimPrefix(rule, "min=")
 	bound, err := strconv.ParseFloat(boundStr, 64)
 	if err != nil {
@@ -136,7 +137,7 @@ func checkMin(fi fieldInfo, fv reflect.Value, rule string) (FieldError, bool) {
 }
 
 // checkMax verifies numeric fields are <= the maximum value.
-func checkMax(fi fieldInfo, fv reflect.Value, rule string) (FieldError, bool) {
+func checkMax(fi *fieldInfo, fv reflect.Value, rule string) (FieldError, bool) {
 	boundStr := strings.TrimPrefix(rule, "max=")
 	bound, err := strconv.ParseFloat(boundStr, 64)
 	if err != nil {
@@ -167,7 +168,7 @@ func checkMax(fi fieldInfo, fv reflect.Value, rule string) (FieldError, bool) {
 }
 
 // checkOneof verifies the field value is one of the allowed values.
-func checkOneof(fi fieldInfo, fv reflect.Value, rule string) (FieldError, bool) {
+func checkOneof(fi *fieldInfo, fv reflect.Value, rule string) (FieldError, bool) {
 	allowedStr := strings.TrimPrefix(rule, "oneof=")
 	allowed := strings.Split(allowedStr, " ")
 

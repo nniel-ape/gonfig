@@ -6,6 +6,9 @@ import (
 	"unicode"
 )
 
+// timePkgPath is the package path for the time package, used to detect time.Duration.
+const timePkgPath = "time"
+
 // fieldInfo holds metadata about a single struct field extracted via reflection.
 type fieldInfo struct {
 	Name          string       // Go field name (e.g., "Host")
@@ -43,7 +46,7 @@ func extractFields(v reflect.Value, prefix string, indexPrefix []int) []fieldInf
 		idx[len(indexPrefix)] = i
 
 		// Recurse into nested structs (but not special types like time.Duration).
-		if sf.Type.Kind() == reflect.Struct && sf.Type.PkgPath() != "time" {
+		if sf.Type.Kind() == reflect.Struct && sf.Type.PkgPath() != timePkgPath {
 			fields = append(fields, extractFields(v.Field(i), path, idx)...)
 			continue
 		}
@@ -95,7 +98,7 @@ func extractFields(v reflect.Value, prefix string, indexPrefix []int) []fieldInf
 // toEnvName converts a field path like "DB.Host" or "LogLevel" to "DB_HOST" or "LOG_LEVEL".
 func toEnvName(path string) string {
 	parts := strings.Split(path, ".")
-	var envParts []string
+	envParts := make([]string, 0, len(parts))
 	for _, p := range parts {
 		envParts = append(envParts, camelToSnake(p))
 	}
@@ -105,7 +108,7 @@ func toEnvName(path string) string {
 // toFlagName converts a field path like "DB.Host" or "LogLevel" to "db-host" or "log-level".
 func toFlagName(path string) string {
 	parts := strings.Split(path, ".")
-	var flagParts []string
+	flagParts := make([]string, 0, len(parts))
 	for _, p := range parts {
 		flagParts = append(flagParts, camelToSnake(p))
 	}
@@ -115,7 +118,7 @@ func toFlagName(path string) string {
 // toConfigKey converts a field path like "DB.Host" or "LogLevel" to "db.host" or "log_level".
 func toConfigKey(path string) string {
 	parts := strings.Split(path, ".")
-	var keyParts []string
+	keyParts := make([]string, 0, len(parts))
 	for _, p := range parts {
 		keyParts = append(keyParts, strings.ToLower(camelToSnake(p)))
 	}
@@ -130,16 +133,8 @@ func camelToSnake(s string) string {
 	runes := []rune(s)
 	for i, r := range runes {
 		if unicode.IsUpper(r) {
-			if i > 0 {
-				// Insert underscore before uppercase letter if:
-				// - previous char is lowercase, OR
-				// - previous char is uppercase AND next char is lowercase (end of acronym)
-				prev := runes[i-1]
-				if unicode.IsLower(prev) {
-					result.WriteRune('_')
-				} else if unicode.IsUpper(prev) && i+1 < len(runes) && unicode.IsLower(runes[i+1]) {
-					result.WriteRune('_')
-				}
+			if i > 0 && needsUnderscore(runes, i) {
+				result.WriteRune('_')
 			}
 			result.WriteRune(r)
 		} else {
@@ -147,4 +142,14 @@ func camelToSnake(s string) string {
 		}
 	}
 	return result.String()
+}
+
+// needsUnderscore reports whether an underscore should be inserted before runes[i].
+// It assumes runes[i] is uppercase and i > 0.
+func needsUnderscore(runes []rune, i int) bool {
+	prev := runes[i-1]
+	if unicode.IsLower(prev) {
+		return true
+	}
+	return unicode.IsUpper(prev) && i+1 < len(runes) && unicode.IsLower(runes[i+1])
 }

@@ -535,7 +535,7 @@ func TestValidationErrorString(t *testing.T) {
 // containsRule checks if a ValidationError contains a FieldError with the given rule prefix.
 func containsRule(ve *ValidationError, rulePrefix string) bool {
 	for _, fe := range ve.Errors {
-		if fe.Rule == rulePrefix || (len(rulePrefix) > 0 && len(fe.Rule) >= len(rulePrefix) && fe.Rule[:len(rulePrefix)] == rulePrefix) {
+		if fe.Rule == rulePrefix || (rulePrefix != "" && len(fe.Rule) >= len(rulePrefix) && fe.Rule[:len(rulePrefix)] == rulePrefix) {
 			return true
 		}
 	}
@@ -543,7 +543,7 @@ func containsRule(ve *ValidationError, rulePrefix string) bool {
 }
 
 func containsSubstring(s, sub string) bool {
-	return len(s) >= len(sub) && (s == sub || len(sub) == 0 || findSubstring(s, sub))
+	return len(s) >= len(sub) && (s == sub || sub == "" || findSubstring(s, sub))
 }
 
 func findSubstring(s, sub string) bool {
