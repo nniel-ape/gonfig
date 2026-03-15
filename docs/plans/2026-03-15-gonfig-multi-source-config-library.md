@@ -107,11 +107,11 @@ port = 3306
 ## Implementation Steps
 
 ### Task 1: Project scaffolding
-- [ ] run `go mod init github.com/nniel-ape/gonfig` and set Go 1.22
-- [ ] create directory structure: root package, `testdata/`
-- [ ] create initial `gonfig.go` with package doc comment and `Load()` stub that returns nil
-- [ ] create `gonfig_test.go` with a placeholder test that calls `Load()` and asserts no error
-- [ ] run tests — must pass before next task
+- [x] run `go mod init github.com/nniel-ape/gonfig` and set Go 1.22
+- [x] create directory structure: root package, `testdata/`
+- [x] create initial `gonfig.go` with package doc comment and `Load()` stub that returns nil
+- [x] create `gonfig_test.go` with a placeholder test that calls `Load()` and asserts no error
+- [x] run tests — must pass before next task
 
 ### Task 2: Struct field info extractor (reflection core)
 - [ ] define `fieldInfo` struct: `Name`, `Path` (dot-separated), `Type`, `DefaultVal`, `EnvName`, `FlagName`, `ConfigKey`, `Description`, `ValidateRules`, `Index` path for reflect access
