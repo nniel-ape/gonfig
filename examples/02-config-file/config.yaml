@@ -1,0 +1,12 @@
+server:
+  host: "0.0.0.0"
+  port: 3000
+
+database:
+  host: "db.example.com"
+  port: 5432
+  name: "production"
+  user: "app_user"
+  password: "s3cret"
+
+log_level: "debug"
