@@ -1,5 +1,6 @@
 # gonfig
 
+[![CI](https://github.com/nniel-ape/gonfig/actions/workflows/ci.yml/badge.svg)](https://github.com/nniel-ape/gonfig/actions/workflows/ci.yml)
 [![Go Reference](https://pkg.go.dev/badge/github.com/nniel-ape/gonfig.svg)](https://pkg.go.dev/github.com/nniel-ape/gonfig)
 [![Go Report Card](https://goreportcard.com/badge/github.com/nniel-ape/gonfig)](https://goreportcard.com/report/github.com/nniel-ape/gonfig)
 [![Coverage](https://img.shields.io/badge/coverage-94.1%25-brightgreen)](https://github.com/nniel-ape/gonfig)
@@ -32,6 +33,7 @@ package main
 
 import (
     "fmt"
+    "log"
     "os"
 
     "github.com/nniel-ape/gonfig"
@@ -54,9 +56,7 @@ func main() {
         gonfig.WithFlags(os.Args[1:]),
     )
     if err != nil {
-        fmt.Fprintln(os.Stderr, err)
-        fmt.Fprintln(os.Stderr, gonfig.Usage(&cfg, gonfig.WithEnvPrefix("APP")))
-        os.Exit(1)
+        log.Fatal(err)
     }
 
     fmt.Printf("Connecting to %s:%d\n", cfg.DB.Host, cfg.DB.Port)
@@ -72,6 +72,7 @@ func main() {
 | `flag:"name"` | Explicit flag name (auto-derived if omitted) | `flag:"custom-host"` |
 | `gonfig:"key"` | Explicit file/config key (auto-derived if omitted) | `gonfig:"custom_key"` |
 | `description:"text"` | Field description for help output | `description:"database host"` |
+| `short:"x"` | Short flag alias (single char, explicit only) | `short:"p"` for `-p` |
 | `validate:"rules"` | Validation rules (comma-separated) | `validate:"required,min=1"` |
 
 ### Name Auto-Derivation
@@ -143,13 +144,17 @@ Populates the target struct from all configured sources. The target must be a no
 ### Options
 
 ```go
-gonfig.WithFile("config.yaml")           // Load from file (format detected by extension)
-gonfig.WithEnvPrefix("APP")              // Prefix for env var lookups
-gonfig.WithFlags(os.Args[1:])            // Parse CLI flags
-gonfig.WithFileContent(data, gonfig.JSON) // Load from bytes (useful for testing/embedding)
+gonfig.WithFile("config.yaml")            // Load from file (format detected by extension)
+gonfig.WithEnvPrefix("APP")               // Prefix for env var lookups
+gonfig.WithFlags(os.Args[1:])             // Parse CLI flags
+gonfig.WithFileContent(data, gonfig.JSON)  // Load from bytes (useful for testing/embedding)
+gonfig.WithAutoHelp(false)                 // Disable auto --help (returns flag.ErrHelp instead)
+gonfig.WithoutValidation()                 // Skip validation step (for custom validation)
 ```
 
 Multiple `WithFile` calls load files in order; later files override earlier ones.
+
+By default, when `WithFlags` is used and `--help`/`-h` is passed, Load prints usage and exits. Use `WithAutoHelp(false)` to receive `flag.ErrHelp` from Load for manual handling.
 
 ### Usage
 
@@ -206,6 +211,19 @@ if errors.As(err, &ve) {
 | `[]float64` | comma-separated | native array |
 | `map[string]string` | not supported | native map |
 | `map[string]any` | not supported | native map |
+
+## Examples
+
+See the [examples/](examples/) directory for runnable demos:
+
+| Example | What it shows |
+|---------|--------------|
+| [01-basic](examples/01-basic/) | Defaults only — simplest usage |
+| [02-config-file](examples/02-config-file/) | Loading from a YAML file |
+| [03-all-sources](examples/03-all-sources/) | Full pipeline: defaults + file + env + flags + auto `--help` |
+| [04-validation](examples/04-validation/) | Validation rules and error inspection |
+| [05-advanced-types](examples/05-advanced-types/) | Slices, maps, and `time.Duration` |
+| [06-manual-handling](examples/06-manual-handling/) | Manual `--help` and validation error handling |
 
 ## License
 
