@@ -167,13 +167,13 @@ port = 3306
 - [x] run tests — must pass before next task
 
 ### Task 8: Flag provider
-- [ ] implement `applyFlags(target any, fields []fieldInfo, args []string) error` — create `flag.FlagSet`, register flags for all fields with descriptions and defaults, parse args, apply only explicitly-set flags
-- [ ] implement detection of explicitly-set flags (use `FlagSet.Visit`) to distinguish "flag set to zero" from "flag not provided"
-- [ ] write tests for flag parsing — basic types
-- [ ] write tests for flag parsing — only explicitly-set flags override (unset flags don't clobber file/env values)
-- [ ] write tests for flag parsing — unknown flag handling (error case)
-- [ ] write tests for flag parsing — `--help` triggers ErrHelp
-- [ ] run tests — must pass before next task
+- [x] implement `applyFlags(target any, fields []fieldInfo, args []string) error` — create `flag.FlagSet`, register flags for all fields with descriptions and defaults, parse args, apply only explicitly-set flags
+- [x] implement detection of explicitly-set flags (use `FlagSet.Visit`) to distinguish "flag set to zero" from "flag not provided"
+- [x] write tests for flag parsing — basic types
+- [x] write tests for flag parsing — only explicitly-set flags override (unset flags don't clobber file/env values)
+- [x] write tests for flag parsing — unknown flag handling (error case)
+- [x] write tests for flag parsing — `--help` triggers ErrHelp
+- [x] run tests — must pass before next task
 
 ### Task 9: Slice and map support
 - [ ] extend `setFieldValue` for `[]string` (comma-separated), `[]int`, `[]float64`
