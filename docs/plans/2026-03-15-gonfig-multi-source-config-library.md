@@ -159,12 +159,12 @@ port = 3306
 - [x] run tests — must pass before next task
 
 ### Task 7: Env provider
-- [ ] implement `applyEnv(target any, fields []fieldInfo, prefix string) error` — for each field, check `os.LookupEnv` with optional prefix, set value if found
-- [ ] write tests for env loading — basic types (string, int, bool) using `t.Setenv`
-- [ ] write tests for env loading — with prefix (APP_DB_HOST)
-- [ ] write tests for env loading — env var not set (field unchanged)
-- [ ] write tests for env loading — invalid env value for type (expect error)
-- [ ] run tests — must pass before next task
+- [x] implement `applyEnv(target any, fields []fieldInfo, prefix string) error` — for each field, check `os.LookupEnv` with optional prefix, set value if found
+- [x] write tests for env loading — basic types (string, int, bool) using `t.Setenv`
+- [x] write tests for env loading — with prefix (APP_DB_HOST)
+- [x] write tests for env loading — env var not set (field unchanged)
+- [x] write tests for env loading — invalid env value for type (expect error)
+- [x] run tests — must pass before next task
 
 ### Task 8: Flag provider
 - [ ] implement `applyFlags(target any, fields []fieldInfo, args []string) error` — create `flag.FlagSet`, register flags for all fields with descriptions and defaults, parse args, apply only explicitly-set flags
