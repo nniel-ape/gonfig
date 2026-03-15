@@ -14,6 +14,7 @@ type FieldError struct {
 	Message string // Human-readable error message
 }
 
+// Error returns a human-readable string describing the validation failure.
 func (e FieldError) Error() string {
 	return fmt.Sprintf("field %s: %s", e.Field, e.Message)
 }
@@ -24,6 +25,7 @@ type ValidationError struct {
 	Errors []FieldError
 }
 
+// Error returns a combined message listing all field validation failures.
 func (e *ValidationError) Error() string {
 	msgs := make([]string, len(e.Errors))
 	for i, fe := range e.Errors {
@@ -32,6 +34,7 @@ func (e *ValidationError) Error() string {
 	return fmt.Sprintf("validation failed: %s", strings.Join(msgs, "; "))
 }
 
+// Unwrap returns ErrValidation, enabling errors.Is(err, ErrValidation) checks.
 func (e *ValidationError) Unwrap() error {
 	return ErrValidation
 }

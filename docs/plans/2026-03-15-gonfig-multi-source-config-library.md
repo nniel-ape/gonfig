@@ -227,10 +227,10 @@ port = 3306
 - [x] verify test coverage meets 80%+ (`go test -coverprofile=coverage.out ./... && go tool cover -func=coverage.out`)
 
 ### Task 14: [Final] Documentation
-- [ ] write README.md with: badges, install instructions, quick start, full tag reference, all format examples, API reference, priority explanation
-- [ ] add Go doc comments on all exported types, functions, and methods
-- [ ] add runnable `Example` test functions for godoc
-- [ ] update this plan with any deviations
+- [x] write README.md with: badges, install instructions, quick start, full tag reference, all format examples, API reference, priority explanation
+- [x] add Go doc comments on all exported types, functions, and methods
+- [x] add runnable `Example` test functions for godoc
+- [x] update this plan with any deviations — no deviations; most exported symbols already had doc comments from earlier tasks, added missing method comments on FieldError.Error, ValidationError.Error, and ValidationError.Unwrap
 
 ## Technical Details
 
