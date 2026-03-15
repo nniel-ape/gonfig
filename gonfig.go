@@ -139,7 +139,7 @@ func Load(target any, opts ...Option) error {
 	// 4. Apply flags.
 	if o.hasFlags {
 		if err := applyFlags(target, fields, o.flagArgs); err != nil {
-			return fmt.Errorf("%w: %v", ErrParse, err)
+			return fmt.Errorf("%w: %w", ErrParse, err)
 		}
 	}
 
@@ -153,34 +153,14 @@ func Load(target any, opts ...Option) error {
 
 // loadFileContent decodes config from raw bytes with the given format and applies it to target.
 func loadFileContent(target any, data []byte, format Format, fields []fieldInfo) error {
-	r := bytes.NewReader(data)
-	var (
-		m   map[string]any
-		err error
-	)
-
-	switch format {
-	case JSON:
-		m, err = decodeJSON(r)
-	case YAML:
-		m, err = decodeYAML(r)
-	case TOML:
-		m, err = decodeTOML(r)
-	default:
-		return fmt.Errorf("unsupported format: %s", format)
-	}
+	m, err := decodeByFormat(bytes.NewReader(data), string(format))
 	if err != nil {
 		return fmt.Errorf("decode %s: %w", format, err)
 	}
-
 	return applyMap(target, m, fields)
 }
 
 // isFileNotFound checks if an error is caused by a missing file.
 func isFileNotFound(err error) bool {
-	var pathErr *os.PathError
-	if errors.As(err, &pathErr) {
-		return errors.Is(pathErr.Err, os.ErrNotExist)
-	}
-	return false
+	return errors.Is(err, os.ErrNotExist)
 }

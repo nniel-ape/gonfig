@@ -65,12 +65,7 @@ type usageEntry struct {
 // buildSections groups fields into sections based on struct nesting.
 func buildSections(t reflect.Type, fields []fieldInfo, envPrefix string) []section {
 	// Determine which top-level struct fields are nested structs (sections).
-	type sectionInfo struct {
-		name   string
-		prefix string // field path prefix, e.g. "DB"
-	}
-
-	var sectionOrder []sectionInfo
+	var sectionOrder []string
 	sectionSet := make(map[string]bool)
 
 	for i := 0; i < t.NumField(); i++ {
@@ -79,7 +74,7 @@ func buildSections(t reflect.Type, fields []fieldInfo, envPrefix string) []secti
 			continue
 		}
 		if sf.Type.Kind() == reflect.Struct && sf.Type.PkgPath() != "time" {
-			sectionOrder = append(sectionOrder, sectionInfo{name: sf.Name, prefix: sf.Name})
+			sectionOrder = append(sectionOrder, sf.Name)
 			sectionSet[sf.Name] = true
 		}
 	}
@@ -108,9 +103,9 @@ func buildSections(t reflect.Type, fields []fieldInfo, envPrefix string) []secti
 	}
 
 	// Then each nested struct section.
-	for _, si := range sectionOrder {
-		if entries, ok := sectionEntries[si.prefix]; ok && len(entries) > 0 {
-			sections = append(sections, section{name: si.name, entries: entries})
+	for _, name := range sectionOrder {
+		if entries, ok := sectionEntries[name]; ok && len(entries) > 0 {
+			sections = append(sections, section{name: name, entries: entries})
 		}
 	}
 

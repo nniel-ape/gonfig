@@ -17,7 +17,7 @@ type Config struct {
         Port     int    `default:"5432"      description:"database port" validate:"min=1,max=65535"`
         Password string `default:""          description:"database password"`
     }
-    LogLevel string `default:"info" description:"logging level" validate:"oneof=debug,info,warn,error"`
+    LogLevel string `default:"info" description:"logging level" validate:"oneof=debug info warn error"`
     Debug    bool   `default:"false" description:"enable debug mode"`
 }
 
@@ -197,7 +197,7 @@ port = 3306
 
 ### Task 11: Validation
 - [x] implement `validate(target any, fields []fieldInfo) error` — run after all sources applied
-- [x] implement validation rules: `required` (non-zero value), `min=N`/`max=N` (numeric range), `oneof=a,b,c` (allowed values)
+- [x] implement validation rules: `required` (non-zero value), `min=N`/`max=N` (numeric range), `oneof=a b c` (allowed values)
 - [x] collect all validation errors into a single `ValidationError` with per-field details (don't fail on first)
 - [x] write tests for `required` — zero value fails, non-zero passes
 - [x] write tests for `min`/`max` — int and float boundaries, out-of-range errors

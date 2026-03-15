@@ -330,16 +330,15 @@ func TestUsage_ColumnAlignment(t *testing.T) {
 		t.Fatalf("expected 2 lines, got %d", len(lines))
 	}
 
-	// Both lines should have the same column positions for env vars.
+	// Both lines should have the same column positions for env vars and types.
 	// The shorter flag should be padded to match the longer one.
 	envIdx0 := strings.Index(lines[0], "H ")
 	envIdx1 := strings.Index(lines[1], "LONG_FIELD_NAME")
-	_ = envIdx0
-	_ = envIdx1
+	if envIdx0 != envIdx1 {
+		t.Errorf("env columns are not aligned: line0=%d, line1=%d\nline0: %q\nline1: %q",
+			envIdx0, envIdx1, lines[0], lines[1])
+	}
 
-	// Just verify that the lines are not equal length (padding was applied).
-	// The key invariant is that column starts are aligned.
-	// We verify this by checking that types appear at the same offset.
 	typeIdx0 := strings.Index(lines[0], "string")
 	typeIdx1 := strings.Index(lines[1], "string")
 	if typeIdx0 != typeIdx1 {

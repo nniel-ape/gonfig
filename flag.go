@@ -3,6 +3,7 @@ package gonfig
 import (
 	"flag"
 	"fmt"
+	"io"
 	"reflect"
 )
 
@@ -11,6 +12,7 @@ import (
 // modify the struct, preserving values set by earlier sources (file, env).
 func applyFlags(target any, fields []fieldInfo, args []string) error {
 	fs := flag.NewFlagSet("gonfig", flag.ContinueOnError)
+	fs.SetOutput(io.Discard)
 
 	// Register a string flag for each field. We store raw string values and
 	// convert them later, which keeps flag registration simple and reuses

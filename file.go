@@ -18,9 +18,14 @@ import (
 // The file format is detected from the extension (.json, .yaml/.yml, .toml).
 func loadFile(target any, path string, fields []fieldInfo) error {
 	ext := strings.ToLower(filepath.Ext(path))
+	var format string
 	switch ext {
-	case ".json", ".yaml", ".yml", ".toml":
-		// supported
+	case ".json":
+		format = "json"
+	case ".yaml", ".yml":
+		format = "yaml"
+	case ".toml":
+		format = "toml"
 	default:
 		return fmt.Errorf("unsupported config file format: %s", ext)
 	}
@@ -31,20 +36,26 @@ func loadFile(target any, path string, fields []fieldInfo) error {
 	}
 	defer f.Close()
 
-	var data map[string]any
-	switch ext {
-	case ".json":
-		data, err = decodeJSON(f)
-	case ".yaml", ".yml":
-		data, err = decodeYAML(f)
-	case ".toml":
-		data, err = decodeTOML(f)
-	}
+	data, err := decodeByFormat(f, format)
 	if err != nil {
 		return fmt.Errorf("decode %s: %w", ext, err)
 	}
 
 	return applyMap(target, data, fields)
+}
+
+// decodeByFormat decodes config data from a reader using the specified format.
+func decodeByFormat(r io.Reader, format string) (map[string]any, error) {
+	switch format {
+	case "json":
+		return decodeJSON(r)
+	case "yaml":
+		return decodeYAML(r)
+	case "toml":
+		return decodeTOML(r)
+	default:
+		return nil, fmt.Errorf("unsupported format: %s", format)
+	}
 }
 
 // decodeJSON decodes JSON from the reader into a map[string]any.
@@ -164,6 +175,8 @@ func setFieldFromAny(field reflect.Value, val any) error {
 			field.SetFloat(v)
 		case int:
 			field.SetFloat(float64(v))
+		case int64:
+			field.SetFloat(float64(v))
 		default:
 			return fmt.Errorf("expected number for float64, got %T", val)
 		}
@@ -273,11 +286,7 @@ func setMapFromAny(field reflect.Value, val any, typ reflect.Type) error {
 		field.Set(reflect.ValueOf(result))
 
 	case typ.Elem() == reflect.TypeFor[any]():
-		result := make(map[string]any, len(m))
-		for k, v := range m {
-			result[k] = v
-		}
-		field.Set(reflect.ValueOf(result))
+		field.Set(reflect.ValueOf(m))
 
 	default:
 		return fmt.Errorf("unsupported map value type %s", typ.Elem())

@@ -380,4 +380,7 @@ func TestLoad_UnsupportedFileFormat(t *testing.T) {
 	if err == nil {
 		t.Error("Load(unsupported format) should return error")
 	}
+	if !errors.Is(err, ErrParse) {
+		t.Errorf("Load(unsupported format) should return ErrParse, got: %v", err)
+	}
 }
