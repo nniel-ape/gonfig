@@ -571,6 +571,406 @@ func TestLoadFile_TOML_Invalid(t *testing.T) {
 	}
 }
 
+// --- Slice tests (file sources with native arrays) ---
+
+func TestApplyMap_SliceFields(t *testing.T) {
+	type Config struct {
+		Tags  []string  `gonfig:"tags"`
+		Ports []int     `gonfig:"ports"`
+		Rates []float64 `gonfig:"rates"`
+	}
+
+	var cfg Config
+	fields := extractFields(reflect.ValueOf(&cfg).Elem(), "", nil)
+
+	data := map[string]any{
+		"tags":  []any{"web", "api", "v2"},
+		"ports": []any{float64(8080), float64(8443), float64(9090)},
+		"rates": []any{float64(1.5), float64(2.7), float64(3.14)},
+	}
+
+	if err := applyMap(&cfg, data, fields); err != nil {
+		t.Fatalf("applyMap: unexpected error: %v", err)
+	}
+
+	wantTags := []string{"web", "api", "v2"}
+	if !reflect.DeepEqual(cfg.Tags, wantTags) {
+		t.Errorf("Tags = %v, want %v", cfg.Tags, wantTags)
+	}
+	wantPorts := []int{8080, 8443, 9090}
+	if !reflect.DeepEqual(cfg.Ports, wantPorts) {
+		t.Errorf("Ports = %v, want %v", cfg.Ports, wantPorts)
+	}
+	wantRates := []float64{1.5, 2.7, 3.14}
+	if !reflect.DeepEqual(cfg.Rates, wantRates) {
+		t.Errorf("Rates = %v, want %v", cfg.Rates, wantRates)
+	}
+}
+
+func TestLoadFile_JSON_Slices(t *testing.T) {
+	type Config struct {
+		Tags  []string  `gonfig:"tags"`
+		Ports []int     `gonfig:"ports"`
+		Rates []float64 `gonfig:"rates"`
+	}
+
+	var cfg Config
+	fields := extractFields(reflect.ValueOf(&cfg).Elem(), "", nil)
+
+	if err := loadFile(&cfg, "testdata/slices.json", fields); err != nil {
+		t.Fatalf("loadFile: unexpected error: %v", err)
+	}
+
+	if !reflect.DeepEqual(cfg.Tags, []string{"web", "api", "v2"}) {
+		t.Errorf("Tags = %v", cfg.Tags)
+	}
+	if !reflect.DeepEqual(cfg.Ports, []int{8080, 8443, 9090}) {
+		t.Errorf("Ports = %v", cfg.Ports)
+	}
+	if !reflect.DeepEqual(cfg.Rates, []float64{1.5, 2.7, 3.14}) {
+		t.Errorf("Rates = %v", cfg.Rates)
+	}
+}
+
+func TestLoadFile_YAML_Slices(t *testing.T) {
+	type Config struct {
+		Tags  []string  `gonfig:"tags"`
+		Ports []int     `gonfig:"ports"`
+		Rates []float64 `gonfig:"rates"`
+	}
+
+	var cfg Config
+	fields := extractFields(reflect.ValueOf(&cfg).Elem(), "", nil)
+
+	if err := loadFile(&cfg, "testdata/slices.yaml", fields); err != nil {
+		t.Fatalf("loadFile: unexpected error: %v", err)
+	}
+
+	if !reflect.DeepEqual(cfg.Tags, []string{"web", "api", "v2"}) {
+		t.Errorf("Tags = %v", cfg.Tags)
+	}
+	if !reflect.DeepEqual(cfg.Ports, []int{8080, 8443, 9090}) {
+		t.Errorf("Ports = %v", cfg.Ports)
+	}
+	if !reflect.DeepEqual(cfg.Rates, []float64{1.5, 2.7, 3.14}) {
+		t.Errorf("Rates = %v", cfg.Rates)
+	}
+}
+
+func TestLoadFile_TOML_Slices(t *testing.T) {
+	type Config struct {
+		Tags  []string  `gonfig:"tags"`
+		Ports []int     `gonfig:"ports"`
+		Rates []float64 `gonfig:"rates"`
+	}
+
+	var cfg Config
+	fields := extractFields(reflect.ValueOf(&cfg).Elem(), "", nil)
+
+	if err := loadFile(&cfg, "testdata/slices.toml", fields); err != nil {
+		t.Fatalf("loadFile: unexpected error: %v", err)
+	}
+
+	if !reflect.DeepEqual(cfg.Tags, []string{"web", "api", "v2"}) {
+		t.Errorf("Tags = %v", cfg.Tags)
+	}
+	if !reflect.DeepEqual(cfg.Ports, []int{8080, 8443, 9090}) {
+		t.Errorf("Ports = %v", cfg.Ports)
+	}
+	if !reflect.DeepEqual(cfg.Rates, []float64{1.5, 2.7, 3.14}) {
+		t.Errorf("Rates = %v", cfg.Rates)
+	}
+}
+
+// --- Map tests (file sources with native maps) ---
+
+func TestApplyMap_MapStringString(t *testing.T) {
+	type Config struct {
+		Labels map[string]string `gonfig:"labels"`
+	}
+
+	var cfg Config
+	fields := extractFields(reflect.ValueOf(&cfg).Elem(), "", nil)
+
+	data := map[string]any{
+		"labels": map[string]any{
+			"env":    "production",
+			"region": "us-east-1",
+			"team":   "platform",
+		},
+	}
+
+	if err := applyMap(&cfg, data, fields); err != nil {
+		t.Fatalf("applyMap: unexpected error: %v", err)
+	}
+
+	want := map[string]string{"env": "production", "region": "us-east-1", "team": "platform"}
+	if !reflect.DeepEqual(cfg.Labels, want) {
+		t.Errorf("Labels = %v, want %v", cfg.Labels, want)
+	}
+}
+
+func TestApplyMap_MapStringAny(t *testing.T) {
+	type Config struct {
+		Metadata map[string]any `gonfig:"metadata"`
+	}
+
+	var cfg Config
+	fields := extractFields(reflect.ValueOf(&cfg).Elem(), "", nil)
+
+	data := map[string]any{
+		"metadata": map[string]any{
+			"version": "1.0",
+			"count":   float64(42),
+			"enabled": true,
+		},
+	}
+
+	if err := applyMap(&cfg, data, fields); err != nil {
+		t.Fatalf("applyMap: unexpected error: %v", err)
+	}
+
+	if cfg.Metadata["version"] != "1.0" {
+		t.Errorf("Metadata[version] = %v", cfg.Metadata["version"])
+	}
+	if cfg.Metadata["count"] != float64(42) {
+		t.Errorf("Metadata[count] = %v", cfg.Metadata["count"])
+	}
+	if cfg.Metadata["enabled"] != true {
+		t.Errorf("Metadata[enabled] = %v", cfg.Metadata["enabled"])
+	}
+}
+
+func TestLoadFile_JSON_Maps(t *testing.T) {
+	type Config struct {
+		Labels   map[string]string `gonfig:"labels"`
+		Metadata map[string]any    `gonfig:"metadata"`
+	}
+
+	var cfg Config
+	fields := extractFields(reflect.ValueOf(&cfg).Elem(), "", nil)
+
+	if err := loadFile(&cfg, "testdata/maps.json", fields); err != nil {
+		t.Fatalf("loadFile: unexpected error: %v", err)
+	}
+
+	wantLabels := map[string]string{"env": "production", "region": "us-east-1", "team": "platform"}
+	if !reflect.DeepEqual(cfg.Labels, wantLabels) {
+		t.Errorf("Labels = %v, want %v", cfg.Labels, wantLabels)
+	}
+	if cfg.Metadata["version"] != "1.0" {
+		t.Errorf("Metadata[version] = %v", cfg.Metadata["version"])
+	}
+}
+
+func TestLoadFile_YAML_Maps(t *testing.T) {
+	type Config struct {
+		Labels   map[string]string `gonfig:"labels"`
+		Metadata map[string]any    `gonfig:"metadata"`
+	}
+
+	var cfg Config
+	fields := extractFields(reflect.ValueOf(&cfg).Elem(), "", nil)
+
+	if err := loadFile(&cfg, "testdata/maps.yaml", fields); err != nil {
+		t.Fatalf("loadFile: unexpected error: %v", err)
+	}
+
+	wantLabels := map[string]string{"env": "production", "region": "us-east-1", "team": "platform"}
+	if !reflect.DeepEqual(cfg.Labels, wantLabels) {
+		t.Errorf("Labels = %v, want %v", cfg.Labels, wantLabels)
+	}
+	if cfg.Metadata["version"] != "1.0" {
+		t.Errorf("Metadata[version] = %v", cfg.Metadata["version"])
+	}
+}
+
+func TestLoadFile_TOML_Maps(t *testing.T) {
+	type Config struct {
+		Labels   map[string]string `gonfig:"labels"`
+		Metadata map[string]any    `gonfig:"metadata"`
+	}
+
+	var cfg Config
+	fields := extractFields(reflect.ValueOf(&cfg).Elem(), "", nil)
+
+	if err := loadFile(&cfg, "testdata/maps.toml", fields); err != nil {
+		t.Fatalf("loadFile: unexpected error: %v", err)
+	}
+
+	wantLabels := map[string]string{"env": "production", "region": "us-east-1", "team": "platform"}
+	if !reflect.DeepEqual(cfg.Labels, wantLabels) {
+		t.Errorf("Labels = %v, want %v", cfg.Labels, wantLabels)
+	}
+	if cfg.Metadata["version"] != "1.0" {
+		t.Errorf("Metadata[version] = %v", cfg.Metadata["version"])
+	}
+}
+
+// --- Slice edge cases ---
+
+func TestApplyMap_EmptySlice(t *testing.T) {
+	type Config struct {
+		Tags []string `gonfig:"tags"`
+	}
+
+	var cfg Config
+	fields := extractFields(reflect.ValueOf(&cfg).Elem(), "", nil)
+
+	data := map[string]any{
+		"tags": []any{},
+	}
+
+	if err := applyMap(&cfg, data, fields); err != nil {
+		t.Fatalf("applyMap: unexpected error: %v", err)
+	}
+
+	if cfg.Tags == nil || len(cfg.Tags) != 0 {
+		t.Errorf("Tags = %v, want empty non-nil slice", cfg.Tags)
+	}
+}
+
+func TestApplyMap_SingleElementSlice(t *testing.T) {
+	type Config struct {
+		Tags  []string `gonfig:"tags"`
+		Ports []int    `gonfig:"ports"`
+	}
+
+	var cfg Config
+	fields := extractFields(reflect.ValueOf(&cfg).Elem(), "", nil)
+
+	data := map[string]any{
+		"tags":  []any{"single"},
+		"ports": []any{float64(8080)},
+	}
+
+	if err := applyMap(&cfg, data, fields); err != nil {
+		t.Fatalf("applyMap: unexpected error: %v", err)
+	}
+
+	if !reflect.DeepEqual(cfg.Tags, []string{"single"}) {
+		t.Errorf("Tags = %v, want [single]", cfg.Tags)
+	}
+	if !reflect.DeepEqual(cfg.Ports, []int{8080}) {
+		t.Errorf("Ports = %v, want [8080]", cfg.Ports)
+	}
+}
+
+func TestSetSliceFromAny_Float64(t *testing.T) {
+	field := reflect.New(reflect.TypeFor[[]float64]()).Elem()
+	err := setSliceFromAny(field, []any{float64(1.5), float64(2.7)}, field.Type())
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	got := field.Interface().([]float64)
+	want := []float64{1.5, 2.7}
+	if !reflect.DeepEqual(got, want) {
+		t.Errorf("got %v, want %v", got, want)
+	}
+}
+
+func TestSetSliceFromAny_IntFromYAML(t *testing.T) {
+	// YAML decodes integers as int, not float64
+	field := reflect.New(reflect.TypeFor[[]int]()).Elem()
+	err := setSliceFromAny(field, []any{1, 2, 3}, field.Type())
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	got := field.Interface().([]int)
+	want := []int{1, 2, 3}
+	if !reflect.DeepEqual(got, want) {
+		t.Errorf("got %v, want %v", got, want)
+	}
+}
+
+func TestSetSliceFromAny_Float64FromYAMLInt(t *testing.T) {
+	// YAML decodes integers as int; []float64 field should accept them
+	field := reflect.New(reflect.TypeFor[[]float64]()).Elem()
+	err := setSliceFromAny(field, []any{1, 2, 3}, field.Type())
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	got := field.Interface().([]float64)
+	want := []float64{1, 2, 3}
+	if !reflect.DeepEqual(got, want) {
+		t.Errorf("got %v, want %v", got, want)
+	}
+}
+
+func TestSetMapFromAny_NotAMap(t *testing.T) {
+	field := reflect.New(reflect.TypeFor[map[string]string]()).Elem()
+	err := setMapFromAny(field, "not a map", field.Type())
+	if err == nil {
+		t.Fatal("expected error")
+	}
+}
+
+func TestSetMapFromAny_StringValueMismatch(t *testing.T) {
+	field := reflect.New(reflect.TypeFor[map[string]string]()).Elem()
+	err := setMapFromAny(field, map[string]any{"key": 42}, field.Type())
+	if err == nil {
+		t.Fatal("expected error for non-string value in map[string]string")
+	}
+}
+
+// --- Slice env/flag tests ---
+
+func TestSlice_EnvCommaSeparated(t *testing.T) {
+	type Config struct {
+		Tags  []string  `gonfig:"tags"`
+		Ports []int     `gonfig:"ports"`
+		Rates []float64 `gonfig:"rates"`
+	}
+
+	var cfg Config
+	fields := extractFields(reflect.ValueOf(&cfg).Elem(), "", nil)
+
+	t.Setenv("TAGS", "web,api,v2")
+	t.Setenv("PORTS", "8080,8443,9090")
+	t.Setenv("RATES", "1.5,2.7,3.14")
+
+	if err := applyEnv(&cfg, fields, ""); err != nil {
+		t.Fatalf("applyEnv: unexpected error: %v", err)
+	}
+
+	if !reflect.DeepEqual(cfg.Tags, []string{"web", "api", "v2"}) {
+		t.Errorf("Tags = %v", cfg.Tags)
+	}
+	if !reflect.DeepEqual(cfg.Ports, []int{8080, 8443, 9090}) {
+		t.Errorf("Ports = %v", cfg.Ports)
+	}
+	if !reflect.DeepEqual(cfg.Rates, []float64{1.5, 2.7, 3.14}) {
+		t.Errorf("Rates = %v", cfg.Rates)
+	}
+}
+
+func TestSlice_FlagCommaSeparated(t *testing.T) {
+	type Config struct {
+		Tags  []string  `gonfig:"tags"`
+		Ports []int     `gonfig:"ports"`
+		Rates []float64 `gonfig:"rates"`
+	}
+
+	var cfg Config
+	fields := extractFields(reflect.ValueOf(&cfg).Elem(), "", nil)
+
+	args := []string{"--tags", "web,api,v2", "--ports", "8080,8443,9090", "--rates", "1.5,2.7,3.14"}
+
+	if err := applyFlags(&cfg, fields, args); err != nil {
+		t.Fatalf("applyFlags: unexpected error: %v", err)
+	}
+
+	if !reflect.DeepEqual(cfg.Tags, []string{"web", "api", "v2"}) {
+		t.Errorf("Tags = %v", cfg.Tags)
+	}
+	if !reflect.DeepEqual(cfg.Ports, []int{8080, 8443, 9090}) {
+		t.Errorf("Ports = %v", cfg.Ports)
+	}
+	if !reflect.DeepEqual(cfg.Rates, []float64{1.5, 2.7, 3.14}) {
+		t.Errorf("Rates = %v", cfg.Rates)
+	}
+}
+
 func TestLoadFile_UnsupportedFormat(t *testing.T) {
 	type Config struct {
 		Host string

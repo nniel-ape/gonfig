@@ -176,13 +176,13 @@ port = 3306
 - [x] run tests — must pass before next task
 
 ### Task 9: Slice and map support
-- [ ] extend `setFieldValue` for `[]string` (comma-separated), `[]int`, `[]float64`
-- [ ] extend `applyMap` for slice fields from file sources (native arrays)
-- [ ] extend `applyMap` for `map[string]string` and `map[string]any` fields from file sources
-- [ ] write tests for slice fields — env (comma-separated), flag (comma-separated), file (native array)
-- [ ] write tests for map fields — file source (native map)
-- [ ] write tests for edge cases — empty slice, single-element slice, nested slices
-- [ ] run tests — must pass before next task
+- [x] extend `setFieldValue` for `[]string` (comma-separated), `[]int`, `[]float64`
+- [x] extend `applyMap` for slice fields from file sources (native arrays)
+- [x] extend `applyMap` for `map[string]string` and `map[string]any` fields from file sources
+- [x] write tests for slice fields — env (comma-separated), flag (comma-separated), file (native array)
+- [x] write tests for map fields — file source (native map)
+- [x] write tests for edge cases — empty slice, single-element slice, nested slices
+- [x] run tests — must pass before next task
 
 ### Task 10: Load orchestrator and public API
 - [ ] define option types: `Option`, `WithEnvPrefix(string)`, `WithFile(string)`, `WithFlags([]string)`, `WithFileContent([]byte, Format)`

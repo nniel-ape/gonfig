@@ -178,6 +178,9 @@ func setFieldFromAny(field reflect.Value, val any) error {
 	case reflect.Slice:
 		return setSliceFromAny(field, val, typ)
 
+	case reflect.Map:
+		return setMapFromAny(field, val, typ)
+
 	default:
 		return fmt.Errorf("unsupported type %s", typ.Kind())
 	}
@@ -208,16 +211,76 @@ func setSliceFromAny(field reflect.Value, val any, typ reflect.Type) error {
 	case reflect.Int:
 		slice := make([]int, len(arr))
 		for i, elem := range arr {
-			f, ok := elem.(float64)
-			if !ok {
+			switch v := elem.(type) {
+			case float64:
+				slice[i] = int(v)
+			case int:
+				slice[i] = v
+			case int64:
+				slice[i] = int(v)
+			default:
 				return fmt.Errorf("expected number in array element %d, got %T", i, elem)
 			}
-			slice[i] = int(f)
+		}
+		field.Set(reflect.ValueOf(slice))
+
+	case reflect.Float64:
+		slice := make([]float64, len(arr))
+		for i, elem := range arr {
+			switch v := elem.(type) {
+			case float64:
+				slice[i] = v
+			case int:
+				slice[i] = float64(v)
+			case int64:
+				slice[i] = float64(v)
+			default:
+				return fmt.Errorf("expected number in array element %d, got %T", i, elem)
+			}
 		}
 		field.Set(reflect.ValueOf(slice))
 
 	default:
 		return fmt.Errorf("unsupported slice element type %s", elemKind)
+	}
+
+	return nil
+}
+
+// setMapFromAny converts a map[string]any from a file decoder into a typed map.
+// Supports map[string]string and map[string]any.
+func setMapFromAny(field reflect.Value, val any, typ reflect.Type) error {
+	m, ok := val.(map[string]any)
+	if !ok {
+		return fmt.Errorf("expected map, got %T", val)
+	}
+
+	if typ.Key().Kind() != reflect.String {
+		return fmt.Errorf("unsupported map key type %s", typ.Key().Kind())
+	}
+
+	elemKind := typ.Elem().Kind()
+	switch {
+	case elemKind == reflect.String:
+		result := make(map[string]string, len(m))
+		for k, v := range m {
+			s, ok := v.(string)
+			if !ok {
+				return fmt.Errorf("expected string for map value %q, got %T", k, v)
+			}
+			result[k] = s
+		}
+		field.Set(reflect.ValueOf(result))
+
+	case typ.Elem() == reflect.TypeFor[any]():
+		result := make(map[string]any, len(m))
+		for k, v := range m {
+			result[k] = v
+		}
+		field.Set(reflect.ValueOf(result))
+
+	default:
+		return fmt.Errorf("unsupported map value type %s", typ.Elem())
 	}
 
 	return nil

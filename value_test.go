@@ -247,6 +247,42 @@ func TestSetFieldValue_IntSlice(t *testing.T) {
 	}
 }
 
+func TestSetFieldValue_Float64Slice(t *testing.T) {
+	tests := []struct {
+		name    string
+		raw     string
+		want    []float64
+		wantErr bool
+	}{
+		{"multiple", "1.5,2.7,3.14", []float64{1.5, 2.7, 3.14}, false},
+		{"single", "3.14", []float64{3.14}, false},
+		{"with spaces", "1.5, 2.7, 3.14", []float64{1.5, 2.7, 3.14}, false},
+		{"integers", "1,2,3", []float64{1, 2, 3}, false},
+		{"empty", "", []float64{}, false},
+		{"invalid element", "1.5,abc,3.14", nil, true},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var s []float64
+			v := reflect.ValueOf(&s).Elem()
+			err := setFieldValue(v, tt.raw)
+			if tt.wantErr {
+				if err == nil {
+					t.Fatal("expected error, got nil")
+				}
+				return
+			}
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+			if !reflect.DeepEqual(s, tt.want) {
+				t.Errorf("got %v, want %v", s, tt.want)
+			}
+		})
+	}
+}
+
 func TestSetFieldValue_UnsupportedType(t *testing.T) {
 	var c complex128
 	v := reflect.ValueOf(&c).Elem()

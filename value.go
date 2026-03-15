@@ -87,6 +87,17 @@ func setSliceValue(field reflect.Value, raw string, typ reflect.Type) error {
 		}
 		field.Set(reflect.ValueOf(slice))
 
+	case reflect.Float64:
+		slice := make([]float64, len(parts))
+		for i, p := range parts {
+			v, err := strconv.ParseFloat(strings.TrimSpace(p), 64)
+			if err != nil {
+				return fmt.Errorf("cannot parse %q as float64 in slice element %d: %w", p, i, err)
+			}
+			slice[i] = v
+		}
+		field.Set(reflect.ValueOf(slice))
+
 	default:
 		return fmt.Errorf("unsupported slice element type %s", elemKind)
 	}

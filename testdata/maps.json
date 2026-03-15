@@ -1,0 +1,12 @@
+{
+  "labels": {
+    "env": "production",
+    "region": "us-east-1",
+    "team": "platform"
+  },
+  "metadata": {
+    "version": "1.0",
+    "count": 42,
+    "enabled": true
+  }
+}
