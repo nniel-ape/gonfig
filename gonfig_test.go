@@ -2,8 +2,10 @@ package gonfig
 
 import (
 	"errors"
+	"flag"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 )
 
@@ -426,5 +428,112 @@ func TestLoad_UnsupportedFileFormat(t *testing.T) {
 	}
 	if !errors.Is(err, ErrParse) {
 		t.Errorf("Load(unsupported format) should return ErrParse, got: %v", err)
+	}
+}
+
+// swapAutoHelp overrides osExit and printFn for testing auto-help behavior.
+// Returns a cleanup function (also registered via t.Cleanup).
+func swapAutoHelp(t *testing.T) (exitCode *int, printed *string) {
+	t.Helper()
+	oldExit := osExit
+	oldPrint := printFn
+
+	var code int = -1
+	var out string
+	osExit = func(c int) { code = c }
+	printFn = func(s string) { out = s }
+	t.Cleanup(func() {
+		osExit = oldExit
+		printFn = oldPrint
+	})
+	return &code, &out
+}
+
+func TestLoad_AutoHelp_PrintsUsageAndExits(t *testing.T) {
+	exitCode, printed := swapAutoHelp(t)
+
+	type Config struct {
+		Host string `default:"localhost" description:"server host"`
+		Port int    `default:"8080"      description:"server port"`
+	}
+
+	var cfg Config
+	err := Load(&cfg,
+		WithFlags([]string{"--help"}),
+		WithEnvPrefix("APP"),
+	)
+	if err != nil {
+		t.Fatalf("Load() returned error: %v", err)
+	}
+	if *exitCode != 0 {
+		t.Errorf("exit code = %d, want 0", *exitCode)
+	}
+	if !strings.Contains(*printed, "APP_HOST") {
+		t.Errorf("usage should contain APP_HOST, got: %s", *printed)
+	}
+	if !strings.Contains(*printed, "--host") {
+		t.Errorf("usage should contain --host, got: %s", *printed)
+	}
+}
+
+func TestLoad_AutoHelp_ShortFlag(t *testing.T) {
+	exitCode, printed := swapAutoHelp(t)
+
+	type Config struct {
+		Host string `default:"localhost" description:"host"`
+	}
+
+	var cfg Config
+	err := Load(&cfg, WithFlags([]string{"-h"}))
+	if err != nil {
+		t.Fatalf("Load() returned error: %v", err)
+	}
+	if *exitCode != 0 {
+		t.Errorf("exit code = %d, want 0", *exitCode)
+	}
+	if *printed == "" {
+		t.Error("expected usage output, got empty string")
+	}
+}
+
+func TestLoad_AutoHelpDisabled_ReturnsFlagErrHelp(t *testing.T) {
+	type Config struct {
+		Host string `default:"localhost"`
+	}
+
+	var cfg Config
+	err := Load(&cfg,
+		WithFlags([]string{"--help"}),
+		WithAutoHelp(false),
+	)
+	if !errors.Is(err, flag.ErrHelp) {
+		t.Errorf("Load() error = %v, want flag.ErrHelp", err)
+	}
+}
+
+func TestLoad_WithoutValidation_SkipsValidation(t *testing.T) {
+	type Config struct {
+		Port int `default:"0" validate:"required,min=1"`
+	}
+
+	var cfg Config
+	err := Load(&cfg, WithoutValidation())
+	if err != nil {
+		t.Fatalf("Load() should not return error when validation is skipped, got: %v", err)
+	}
+	if cfg.Port != 0 {
+		t.Errorf("Port = %d, want 0 (default)", cfg.Port)
+	}
+}
+
+func TestLoad_ValidationRunsByDefault(t *testing.T) {
+	type Config struct {
+		Port int `default:"0" validate:"required"`
+	}
+
+	var cfg Config
+	err := Load(&cfg)
+	if !errors.Is(err, ErrValidation) {
+		t.Errorf("Load() error = %v, want ErrValidation", err)
 	}
 }
