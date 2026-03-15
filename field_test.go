@@ -196,6 +196,7 @@ func TestExtractFields_UnexportedFieldsSkipped(t *testing.T) {
 	}
 
 	var cfg Config
+	_ = cfg.internal // suppress unused field warning; field exists to test unexported-field skipping
 	fields := extractFields(reflect.ValueOf(cfg), "", nil)
 
 	if len(fields) != 1 {
