@@ -1,0 +1,144 @@
+version: "2"
+
+run:
+  timeout: 5m
+  tests: true
+  modules-download-mode: readonly
+  go: "1.22"
+
+formatters:
+  enable:
+    - gofumpt
+    - goimports
+  settings:
+    goimports:
+      local-prefixes: github.com/nniel-ape/gonfig
+
+linters:
+  default: none
+  enable:
+    # Bug detection
+    - bodyclose
+    - durationcheck
+    - errcheck
+    - govet
+    - makezero
+    - nilerr
+    - noctx
+    - rowserrcheck
+    - sqlclosecheck
+    - staticcheck
+
+    # Security
+    - gosec
+    - bidichk
+
+    # Performance
+    - prealloc
+
+    # Style & consistency
+    - copyloopvar
+    - dupword
+    - errname
+    - errorlint
+    - exhaustive
+    - fatcontext
+    - forbidigo
+    - goconst
+    - gocritic
+    - goprintffuncname
+    - grouper
+    - ineffassign
+    - mirror
+    - misspell
+    - nakedret
+    - nolintlint
+    - predeclared
+    - reassign
+    - revive
+    - unconvert
+    - unparam
+    - unused
+    - usestdlibvars
+    - whitespace
+
+    # Complexity
+    - cyclop
+    - gocognit
+    - nestif
+
+  exclusions:
+    presets:
+      - std-error-handling
+      - common-false-positives
+    rules:
+      - path: _test\.go
+        linters:
+          - errcheck
+          - gosec
+          - goconst
+          - unparam
+          - prealloc
+          - cyclop
+          - gocognit
+          - forbidigo
+      - path: examples/
+        linters:
+          - forbidigo
+          - errcheck
+
+  settings:
+    cyclop:
+      max-complexity: 15
+    errcheck:
+      check-type-assertions: true
+      check-blank: true
+    exhaustive:
+      default-signifies-exhaustive: true
+    gocognit:
+      min-complexity: 20
+    goconst:
+      min-len: 3
+      min-occurrences: 3
+    gocritic:
+      enabled-tags:
+        - diagnostic
+        - style
+        - performance
+    gosec:
+      excludes:
+        - G104  # unhandled errors (covered by errcheck)
+    nakedret:
+      max-func-lines: 20
+    nestif:
+      min-complexity: 5
+    prealloc:
+      simple: true
+      for-loops: true
+    revive:
+      rules:
+        - name: blank-imports
+        - name: context-as-argument
+        - name: context-keys-type
+        - name: dot-imports
+        - name: error-return
+        - name: error-strings
+        - name: error-naming
+        - name: exported
+        - name: increment-decrement
+        - name: indent-error-flow
+        - name: range
+        - name: receiver-naming
+        - name: time-naming
+        - name: unexported-return
+        - name: var-declaration
+        - name: var-naming
+    staticcheck:
+      checks:
+        - all
+    unparam:
+      check-exported: false
+
+issues:
+  max-issues-per-linter: 50
+  max-same-issues: 5
