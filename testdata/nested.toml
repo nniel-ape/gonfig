@@ -1,0 +1,6 @@
+log_level = "warn"
+debug = false
+
+[db]
+host = "dbhost"
+port = 5432

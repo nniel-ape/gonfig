@@ -10,6 +10,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/BurntSushi/toml"
 	"gopkg.in/yaml.v3"
 )
 
@@ -18,7 +19,7 @@ import (
 func loadFile(target any, path string, fields []fieldInfo) error {
 	ext := strings.ToLower(filepath.Ext(path))
 	switch ext {
-	case ".json", ".yaml", ".yml":
+	case ".json", ".yaml", ".yml", ".toml":
 		// supported
 	default:
 		return fmt.Errorf("unsupported config file format: %s", ext)
@@ -36,6 +37,8 @@ func loadFile(target any, path string, fields []fieldInfo) error {
 		data, err = decodeJSON(f)
 	case ".yaml", ".yml":
 		data, err = decodeYAML(f)
+	case ".toml":
+		data, err = decodeTOML(f)
 	}
 	if err != nil {
 		return fmt.Errorf("decode %s: %w", ext, err)
@@ -57,6 +60,15 @@ func decodeJSON(r io.Reader) (map[string]any, error) {
 func decodeYAML(r io.Reader) (map[string]any, error) {
 	var data map[string]any
 	if err := yaml.NewDecoder(r).Decode(&data); err != nil {
+		return nil, err
+	}
+	return data, nil
+}
+
+// decodeTOML decodes TOML from the reader into a map[string]any.
+func decodeTOML(r io.Reader) (map[string]any, error) {
+	var data map[string]any
+	if _, err := toml.NewDecoder(r).Decode(&data); err != nil {
 		return nil, err
 	}
 	return data, nil

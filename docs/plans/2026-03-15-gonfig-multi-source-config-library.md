@@ -151,12 +151,12 @@ port = 3306
 - [x] run tests — must pass before next task
 
 ### Task 6: File provider — TOML
-- [ ] add `github.com/BurntSushi/toml` dependency
-- [ ] implement `decodeTOML(r io.Reader) (map[string]any, error)`
-- [ ] create `testdata/valid.toml`, `testdata/nested.toml` fixtures
-- [ ] write tests for TOML loading — flat and nested config
-- [ ] write tests for TOML loading — invalid TOML (error case)
-- [ ] run tests — must pass before next task
+- [x] add `github.com/BurntSushi/toml` dependency
+- [x] implement `decodeTOML(r io.Reader) (map[string]any, error)`
+- [x] create `testdata/valid.toml`, `testdata/nested.toml` fixtures
+- [x] write tests for TOML loading — flat and nested config
+- [x] write tests for TOML loading — invalid TOML (error case)
+- [x] run tests — must pass before next task
 
 ### Task 7: Env provider
 - [ ] implement `applyEnv(target any, fields []fieldInfo, prefix string) error` — for each field, check `os.LookupEnv` with optional prefix, set value if found
