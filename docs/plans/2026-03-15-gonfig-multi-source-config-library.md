@@ -143,12 +143,12 @@ port = 3306
 - [x] run tests — must pass before next task
 
 ### Task 5: File provider — YAML
-- [ ] add `gopkg.in/yaml.v3` dependency
-- [ ] implement `decodeYAML(r io.Reader) (map[string]any, error)`
-- [ ] create `testdata/valid.yaml`, `testdata/nested.yaml` fixtures
-- [ ] write tests for YAML loading — flat and nested config
-- [ ] write tests for YAML loading — invalid YAML (error case)
-- [ ] run tests — must pass before next task
+- [x] add `gopkg.in/yaml.v3` dependency
+- [x] implement `decodeYAML(r io.Reader) (map[string]any, error)`
+- [x] create `testdata/valid.yaml`, `testdata/nested.yaml` fixtures
+- [x] write tests for YAML loading — flat and nested config
+- [x] write tests for YAML loading — invalid YAML (error case)
+- [x] run tests — must pass before next task
 
 ### Task 6: File provider — TOML
 - [ ] add `github.com/BurntSushi/toml` dependency

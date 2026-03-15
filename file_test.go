@@ -359,6 +359,112 @@ func TestLoadFile_InvalidJSON(t *testing.T) {
 	}
 }
 
+func TestDecodeYAML(t *testing.T) {
+	input := "host: localhost\nport: 8080\ndebug: true\n"
+	data, err := decodeYAML(strings.NewReader(input))
+	if err != nil {
+		t.Fatalf("decodeYAML: unexpected error: %v", err)
+	}
+	if data["host"] != "localhost" {
+		t.Errorf("host = %v, want localhost", data["host"])
+	}
+	// YAML decodes integers as int, not float64.
+	if data["port"] != 8080 {
+		t.Errorf("port = %v (%T), want 8080", data["port"], data["port"])
+	}
+	if data["debug"] != true {
+		t.Errorf("debug = %v, want true", data["debug"])
+	}
+}
+
+func TestDecodeYAML_Invalid(t *testing.T) {
+	_, err := decodeYAML(strings.NewReader(":\n  :\n  - ][invalid"))
+	if err == nil {
+		t.Fatal("decodeYAML: expected error for invalid YAML")
+	}
+}
+
+func TestLoadFile_YAML_Flat(t *testing.T) {
+	type Config struct {
+		Host     string  `gonfig:"host"`
+		Port     int     `gonfig:"port"`
+		Debug    bool    `gonfig:"debug"`
+		LogLevel string  `gonfig:"log_level"`
+		Rate     float64 `gonfig:"rate"`
+	}
+
+	var cfg Config
+	fields := extractFields(reflect.ValueOf(&cfg).Elem(), "", nil)
+
+	if err := loadFile(&cfg, "testdata/valid.yaml", fields); err != nil {
+		t.Fatalf("loadFile: unexpected error: %v", err)
+	}
+
+	if cfg.Host != "localhost" {
+		t.Errorf("Host = %q, want %q", cfg.Host, "localhost")
+	}
+	if cfg.Port != 8080 {
+		t.Errorf("Port = %d, want %d", cfg.Port, 8080)
+	}
+	if cfg.Debug != true {
+		t.Errorf("Debug = %v, want true", cfg.Debug)
+	}
+	if cfg.LogLevel != "debug" {
+		t.Errorf("LogLevel = %q, want %q", cfg.LogLevel, "debug")
+	}
+	if cfg.Rate != 3.14 {
+		t.Errorf("Rate = %f, want %f", cfg.Rate, 3.14)
+	}
+}
+
+func TestLoadFile_YAML_Nested(t *testing.T) {
+	type Config struct {
+		DB struct {
+			Host string
+			Port int
+		}
+		LogLevel string
+		Debug    bool
+	}
+
+	var cfg Config
+	fields := extractFields(reflect.ValueOf(&cfg).Elem(), "", nil)
+
+	if err := loadFile(&cfg, "testdata/nested.yaml", fields); err != nil {
+		t.Fatalf("loadFile: unexpected error: %v", err)
+	}
+
+	if cfg.DB.Host != "dbhost" {
+		t.Errorf("DB.Host = %q, want %q", cfg.DB.Host, "dbhost")
+	}
+	if cfg.DB.Port != 5432 {
+		t.Errorf("DB.Port = %d, want %d", cfg.DB.Port, 5432)
+	}
+	if cfg.LogLevel != "warn" {
+		t.Errorf("LogLevel = %q, want %q", cfg.LogLevel, "warn")
+	}
+	if cfg.Debug != false {
+		t.Errorf("Debug = %v, want false", cfg.Debug)
+	}
+}
+
+func TestLoadFile_YAML_Invalid(t *testing.T) {
+	type Config struct {
+		Host string
+	}
+
+	var cfg Config
+	fields := extractFields(reflect.ValueOf(&cfg).Elem(), "", nil)
+
+	err := loadFile(&cfg, "testdata/invalid.yaml", fields)
+	if err == nil {
+		t.Fatal("loadFile: expected error for invalid YAML")
+	}
+	if !strings.Contains(err.Error(), "decode") {
+		t.Errorf("error = %q, want it to mention 'decode'", err.Error())
+	}
+}
+
 func TestLoadFile_UnsupportedFormat(t *testing.T) {
 	type Config struct {
 		Host string

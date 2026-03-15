@@ -9,6 +9,8 @@ import (
 	"reflect"
 	"strings"
 	"time"
+
+	"gopkg.in/yaml.v3"
 )
 
 // loadFile reads a config file, decodes it into a map, and applies values to the target struct.
@@ -16,7 +18,7 @@ import (
 func loadFile(target any, path string, fields []fieldInfo) error {
 	ext := strings.ToLower(filepath.Ext(path))
 	switch ext {
-	case ".json":
+	case ".json", ".yaml", ".yml":
 		// supported
 	default:
 		return fmt.Errorf("unsupported config file format: %s", ext)
@@ -32,6 +34,8 @@ func loadFile(target any, path string, fields []fieldInfo) error {
 	switch ext {
 	case ".json":
 		data, err = decodeJSON(f)
+	case ".yaml", ".yml":
+		data, err = decodeYAML(f)
 	}
 	if err != nil {
 		return fmt.Errorf("decode %s: %w", ext, err)
@@ -44,6 +48,15 @@ func loadFile(target any, path string, fields []fieldInfo) error {
 func decodeJSON(r io.Reader) (map[string]any, error) {
 	var data map[string]any
 	if err := json.NewDecoder(r).Decode(&data); err != nil {
+		return nil, err
+	}
+	return data, nil
+}
+
+// decodeYAML decodes YAML from the reader into a map[string]any.
+func decodeYAML(r io.Reader) (map[string]any, error) {
+	var data map[string]any
+	if err := yaml.NewDecoder(r).Decode(&data); err != nil {
 		return nil, err
 	}
 	return data, nil
