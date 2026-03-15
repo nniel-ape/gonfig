@@ -8,6 +8,7 @@ package gonfig
 import (
 	"bytes"
 	"errors"
+	"flag"
 	"fmt"
 	"os"
 	"reflect"
@@ -139,7 +140,10 @@ func Load(target any, opts ...Option) error {
 	// 4. Apply flags.
 	if o.hasFlags {
 		if err := applyFlags(target, fields, o.flagArgs); err != nil {
-			return fmt.Errorf("%w: %w", ErrParse, err)
+			if errors.Is(err, flag.ErrHelp) {
+				return err
+			}
+			return fmt.Errorf("%w: %v", ErrParse, err)
 		}
 	}
 
