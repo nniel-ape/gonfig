@@ -42,11 +42,19 @@ const (
 type Option func(*options)
 
 type options struct {
-	envPrefix   string
-	fileSources []fileSource
-	flagArgs    []string
-	hasFlags    bool
+	envPrefix       string
+	fileSources     []fileSource
+	flagArgs        []string
+	hasFlags        bool
+	disableAutoHelp bool
+	skipValidation  bool
 }
+
+// osExit and printFn are package-level vars to allow testing of auto-help behavior.
+var (
+	osExit  = os.Exit
+	printFn = func(s string) { fmt.Print(s) }
+)
 
 // fileSource represents either a file path or inline content, preserving caller order.
 type fileSource struct {
@@ -84,6 +92,23 @@ func WithFlags(args []string) Option {
 func WithFileContent(data []byte, format Format) Option {
 	return func(o *options) {
 		o.fileSources = append(o.fileSources, fileSource{data: data, format: format})
+	}
+}
+
+// WithAutoHelp controls whether Load automatically prints usage and exits
+// when --help/-h is passed. Default is true (when WithFlags is used).
+// Set to false to receive flag.ErrHelp from Load for manual handling.
+func WithAutoHelp(enabled bool) Option {
+	return func(o *options) {
+		o.disableAutoHelp = !enabled
+	}
+}
+
+// WithoutValidation disables the validation step in Load.
+// Use this when you want to perform custom validation instead.
+func WithoutValidation() Option {
+	return func(o *options) {
+		o.skipValidation = true
 	}
 }
 
@@ -141,15 +166,22 @@ func Load(target any, opts ...Option) error {
 	if o.hasFlags {
 		if err := applyFlags(target, fields, o.flagArgs); err != nil {
 			if errors.Is(err, flag.ErrHelp) {
-				return err
+				if o.disableAutoHelp {
+					return err
+				}
+				printFn(Usage(target, opts...))
+				osExit(0)
+				return nil
 			}
 			return fmt.Errorf("%w: %v", ErrParse, err)
 		}
 	}
 
 	// 5. Validate.
-	if err := validate(target, fields); err != nil {
-		return err
+	if !o.skipValidation {
+		if err := validate(target, fields); err != nil {
+			return err
+		}
 	}
 
 	return nil
