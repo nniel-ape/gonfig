@@ -12,9 +12,10 @@ go run ./examples/01-basic
 |---------|--------------|
 | [01-basic](01-basic/) | Defaults only — simplest usage |
 | [02-config-file](02-config-file/) | Loading from a YAML file |
-| [03-all-sources](03-all-sources/) | Full pipeline: defaults + file + env + flags + `--help` |
+| [03-all-sources](03-all-sources/) | Full pipeline: defaults + file + env + flags + auto `--help` |
 | [04-validation](04-validation/) | Validation rules and error inspection |
 | [05-advanced-types](05-advanced-types/) | Slices, maps, and `time.Duration` |
+| [06-manual-handling](06-manual-handling/) | Manual `--help` and validation error handling |
 
 ## Running
 
@@ -35,4 +36,8 @@ go run ./examples/04-validation
 
 # Advanced types
 cd examples/05-advanced-types && go run .
+
+# Manual help and validation handling
+cd examples/06-manual-handling && go run . --help
+cd examples/06-manual-handling && go run . --server-port 0
 ```

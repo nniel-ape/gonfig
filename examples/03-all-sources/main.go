@@ -1,6 +1,8 @@
 // Example 03-all-sources demonstrates the full gonfig pipeline:
 // defaults → config file → environment variables → command-line flags.
 //
+// --help is handled automatically by gonfig (prints usage and exits).
+//
 // Try different combinations:
 //
 //	cd examples/03-all-sources && go run .
@@ -11,8 +13,6 @@
 package main
 
 import (
-	"errors"
-	"flag"
 	"fmt"
 	"log"
 	"os"
@@ -41,22 +41,6 @@ func main() {
 		gonfig.WithEnvPrefix("APP"),
 		gonfig.WithFlags(os.Args[1:]),
 	)
-
-	// Handle --help: print usage and exit.
-	if errors.Is(err, flag.ErrHelp) {
-		fmt.Print(gonfig.Usage(&cfg, gonfig.WithEnvPrefix("APP")))
-		os.Exit(0)
-	}
-
-	// Handle validation errors.
-	var ve *gonfig.ValidationError
-	if errors.As(err, &ve) {
-		fmt.Fprintln(os.Stderr, "Configuration errors:")
-		for _, fe := range ve.Errors {
-			fmt.Fprintf(os.Stderr, "  - %s: %s\n", fe.Field, fe.Message)
-		}
-		os.Exit(1)
-	}
 
 	if err != nil {
 		log.Fatal(err)
