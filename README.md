@@ -2,6 +2,7 @@
 
 [![Go Reference](https://pkg.go.dev/badge/github.com/nniel-ape/gonfig.svg)](https://pkg.go.dev/github.com/nniel-ape/gonfig)
 [![Go Report Card](https://goreportcard.com/badge/github.com/nniel-ape/gonfig)](https://goreportcard.com/report/github.com/nniel-ape/gonfig)
+[![Coverage](https://img.shields.io/badge/coverage-94.1%25-brightgreen)](https://github.com/nniel-ape/gonfig)
 
 Multi-source configuration loading for Go. Define your config as a struct with tags, and gonfig populates it from environment variables, command-line flags, config files (JSON, YAML, TOML), and defaults — with a clear priority order.
 
