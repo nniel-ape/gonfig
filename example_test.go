@@ -97,6 +97,31 @@ func ExampleUsage() {
 	//   --db-port  APP_DB_PORT  int     (default: 5432)       database port
 }
 
+func ExampleLoad_structGonfigTag() {
+	type Strategy struct {
+		Name   string  `default:"momentum"`
+		Weight float64 `default:"0.5"`
+	}
+	type Config struct {
+		Strategy Strategy `gonfig:"lm"`
+	}
+
+	data := []byte(`{"lm":{"name":"mean_revert","weight":0.8}}`)
+
+	var cfg Config
+	err := gonfig.Load(&cfg, gonfig.WithFileContent(data, gonfig.JSON))
+	if err != nil {
+		fmt.Println("error:", err)
+		return
+	}
+
+	fmt.Println(cfg.Strategy.Name)
+	fmt.Println(cfg.Strategy.Weight)
+	// Output:
+	// mean_revert
+	// 0.8
+}
+
 func ExampleWithFlags() {
 	type Config struct {
 		Host string `default:"localhost"`

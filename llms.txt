@@ -2,7 +2,7 @@
 
 > Multi-source configuration loading for Go. Define your config as a struct with tags, and gonfig populates it from environment variables, command-line flags, config files (JSON, YAML, TOML), and defaults — with a clear priority order: flags > env > file > defaults.
 
-gonfig uses a tag-based API where struct field names are automatically derived into environment variable names (`DB_HOST`), flag names (`--db-host`), and config file keys (`db.host`). Explicit tags (`env`, `flag`, `gonfig`) override auto-derivation when needed. Nested structs are fully supported — `DB.Host` maps to `DB_HOST` / `--db-host` / `db.host` automatically.
+gonfig uses a tag-based API where struct field names are automatically derived into environment variable names (`DB_HOST`), flag names (`--db-host`), and config file keys (`db.host`). Explicit tags (`env`, `flag`, `gonfig`) override auto-derivation when needed. Nested structs are fully supported — `DB.Host` maps to `DB_HOST` / `--db-host` / `db.host` automatically. Common acronyms (API, URL, HTTP, ID, IP, RPC, etc.) are recognized during name derivation — `APIURL` correctly becomes `API_URL` / `--api-url` / `api_url`. The `gonfig` tag on struct fields overrides the path segment for all children, allowing remapping of nested config namespaces.
 
 The library validates configuration after loading using `validate` struct tags (`required`, `min`, `max`, `oneof`). All validation errors are collected and returned together as a structured `ValidationError`. A `Usage` function generates formatted help text from struct metadata.
 

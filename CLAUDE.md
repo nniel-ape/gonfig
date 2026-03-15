@@ -32,6 +32,6 @@ Single-package (`gonfig`) library that loads configuration into a Go struct from
 ### Key Design Patterns
 
 - **Two type-conversion paths**: `setFieldValue` (string→typed, used by defaults/env/flags) in `value.go` vs `setFieldFromAny` (any→typed, used by file decoders) in `file.go`
-- **Name auto-derivation** (`field.go`): `camelToSnake` converts field paths to env names (`DB_HOST`), flag names (`--db-host`), and config keys (`db.host`)
-- **Nested struct recursion**: `extractFields` recurses into struct fields (except `time.Duration`), building dot-separated paths and reflect index chains
+- **Name auto-derivation** (`field.go`): `camelToSnake` converts field paths to env names (`DB_HOST`), flag names (`--db-host`), and config keys (`db.host`). Recognizes common acronyms (API, URL, HTTP, ID, etc.) to split names correctly (e.g., `APIURL` → `API_URL`)
+- **Nested struct recursion**: `extractFields` recurses into struct fields (except `time.Duration`), building dot-separated paths and reflect index chains. The `gonfig` tag on struct fields overrides the path segment for all children
 - **Usage generation** (`usage.go`): builds aligned columnar help text grouped by top-level struct sections

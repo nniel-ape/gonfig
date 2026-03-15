@@ -70,7 +70,7 @@ func main() {
 | `default:"value"` | Default value | `default:"localhost"` |
 | `env:"NAME"` | Explicit env var name (auto-derived if omitted) | `env:"CUSTOM_HOST"` |
 | `flag:"name"` | Explicit flag name (auto-derived if omitted) | `flag:"custom-host"` |
-| `gonfig:"key"` | Explicit file/config key (auto-derived if omitted) | `gonfig:"custom_key"` |
+| `gonfig:"key"` | Explicit file/config key (auto-derived if omitted). On struct fields, overrides the path segment for all children (see below). | `gonfig:"custom_key"` |
 | `description:"text"` | Field description for help output | `description:"database host"` |
 | `short:"x"` | Short flag alias (single char, explicit only) | `short:"p"` for `-p` |
 | `validate:"rules"` | Validation rules (comma-separated) | `validate:"required,min=1"` |
@@ -85,8 +85,31 @@ When explicit tags are not provided, names are derived from the struct field pat
 | `DB.Host` | `db.host` | `DB_HOST` | `--db-host` |
 | `LogLevel` | `log_level` | `LOG_LEVEL` | `--log-level` |
 | `DB.MaxConn` | `db.max_conn` | `DB_MAX_CONN` | `--db-max-conn` |
+| `APIURL` | `api_url` | `API_URL` | `--api-url` |
+| `MarketIDs` | `market_ids` | `MARKET_IDS` | `--market-ids` |
+
+Common acronyms (`API`, `URL`, `HTTP`, `HTTPS`, `ID`, `IP`, `RPC`, `SQL`, `URI`, `DNS`, `SSH`, `SSL`, `TLS`, `TCP`, `UDP`) are recognized and split correctly.
 
 With `WithEnvPrefix("APP")`, env names get the prefix: `DB_HOST` → `APP_DB_HOST`.
+
+### Struct-Level `gonfig` Tag
+
+The `gonfig` tag on a **struct field** overrides the path segment used by all children. This is useful when the Go struct name doesn't match the desired config key:
+
+```go
+type Config struct {
+    Strategy Strategy `gonfig:"latemomentum"`
+}
+
+type Strategy struct {
+    Name   string
+    Weight float64
+}
+// Strategy.Name → env LATEMOMENTUM_NAME, flag --latemomentum-name, config key latemomentum.name
+// Strategy.Weight → env LATEMOMENTUM_WEIGHT, flag --latemomentum-weight, config key latemomentum.weight
+```
+
+On **leaf fields**, the `gonfig` tag only overrides the config file key (env and flag names are unaffected).
 
 ## Config File Formats
 
