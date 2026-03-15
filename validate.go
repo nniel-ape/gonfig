@@ -7,6 +7,8 @@ import (
 	"strings"
 )
 
+const ruleRequired = "required"
+
 // FieldError describes a validation failure for a single struct field.
 type FieldError struct {
 	Field   string // Dot-separated field path (e.g., "DB.Port")
@@ -76,7 +78,7 @@ func validate(target any, fields []fieldInfo) error {
 // Returns the FieldError and false if validation fails.
 func checkRule(fi *fieldInfo, fv reflect.Value, rule string) (FieldError, bool) {
 	switch {
-	case rule == "required":
+	case rule == ruleRequired:
 		return checkRequired(fi, fv)
 	case strings.HasPrefix(rule, "min="):
 		return checkMin(fi, fv, rule)
@@ -98,7 +100,7 @@ func checkRequired(fi *fieldInfo, fv reflect.Value) (FieldError, bool) {
 	if fv.IsZero() {
 		return FieldError{
 			Field:   fi.Path,
-			Rule:    "required",
+			Rule:    ruleRequired,
 			Message: "required field is empty",
 		}, false
 	}
