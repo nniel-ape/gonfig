@@ -19,6 +19,9 @@ func applyFlags(target any, fields []fieldInfo, args []string) error {
 	// the existing setFieldValue type conversion logic.
 	flagVals := make(map[string]*string, len(fields))
 	for _, fi := range fields {
+		if _, exists := flagVals[fi.FlagName]; exists {
+			return fmt.Errorf("duplicate flag name %q for field %s", fi.FlagName, fi.Path)
+		}
 		val := ""
 		flagVals[fi.FlagName] = &val
 		defaultVal := fi.DefaultVal
