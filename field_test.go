@@ -229,6 +229,31 @@ func TestExtractFields_IndexPath(t *testing.T) {
 	}
 }
 
+func TestExtractFields_ShortFlagTag(t *testing.T) {
+	type Config struct {
+		Port  int    `short:"p" description:"server port"`
+		Debug bool   `short:"d" description:"enable debug"`
+		Host  string `description:"server host"` // no short flag
+	}
+
+	var cfg Config
+	fields := extractFields(reflect.ValueOf(cfg), "", nil)
+
+	if len(fields) != 3 {
+		t.Fatalf("expected 3 fields, got %d", len(fields))
+	}
+
+	if fields[0].ShortFlag != "p" {
+		t.Errorf("Port ShortFlag = %q, want %q", fields[0].ShortFlag, "p")
+	}
+	if fields[1].ShortFlag != "d" {
+		t.Errorf("Debug ShortFlag = %q, want %q", fields[1].ShortFlag, "d")
+	}
+	if fields[2].ShortFlag != "" {
+		t.Errorf("Host ShortFlag = %q, want empty", fields[2].ShortFlag)
+	}
+}
+
 func TestToEnvName(t *testing.T) {
 	tests := []struct {
 		input string

@@ -119,8 +119,13 @@ func fieldToEntry(fi fieldInfo, envPrefix string) usageEntry {
 		envName = envPrefix + "_" + envName
 	}
 
+	flagStr := "--" + fi.FlagName
+	if fi.ShortFlag != "" {
+		flagStr = "-" + fi.ShortFlag + ", --" + fi.FlagName
+	}
+
 	return usageEntry{
-		flag:        "--" + fi.FlagName,
+		flag:        flagStr,
 		env:         envName,
 		typeName:    friendlyTypeName(fi.Type),
 		defaultVal:  fi.DefaultVal,
@@ -157,6 +162,23 @@ func friendlyTypeName(t reflect.Type) string {
 func writeSection(b *strings.Builder, entries []usageEntry) {
 	if len(entries) == 0 {
 		return
+	}
+
+	// Check if any entry in this section has a short flag prefix ("-X, ").
+	// If so, pad entries without short flags so the "--" aligns.
+	hasShort := false
+	for _, e := range entries {
+		if strings.HasPrefix(e.flag, "-") && strings.Contains(e.flag, ", --") {
+			hasShort = true
+			break
+		}
+	}
+	if hasShort {
+		for i, e := range entries {
+			if !strings.HasPrefix(e.flag, "-") || !strings.Contains(e.flag, ", --") {
+				entries[i].flag = "    " + e.flag
+			}
+		}
 	}
 
 	// Calculate column widths.

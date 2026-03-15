@@ -6,6 +6,7 @@
 //	cd examples/03-all-sources && go run .
 //	cd examples/03-all-sources && APP_LOG_LEVEL=warn go run .
 //	cd examples/03-all-sources && go run . --server-port 9090
+//	cd examples/03-all-sources && go run . -p 9090
 //	cd examples/03-all-sources && go run . --help
 package main
 
@@ -21,15 +22,15 @@ import (
 
 type Config struct {
 	Server struct {
-		Host string `default:"localhost" description:"server bind address"`
-		Port int    `default:"8080"      description:"server port" validate:"min=1,max=65535"`
+		Host string `default:"localhost" description:"server bind address" short:"H"`
+		Port int    `default:"8080"      description:"server port" validate:"min=1,max=65535" short:"p"`
 	}
 	Database struct {
 		Host string `default:"localhost" description:"database host"`
 		Port int    `default:"5432"      description:"database port" validate:"min=1,max=65535"`
 		Name string `default:"mydb"      description:"database name" validate:"required"`
 	}
-	LogLevel string `default:"info" description:"logging level" validate:"oneof=debug info warn error"`
+	LogLevel string `default:"info" description:"logging level" validate:"oneof=debug info warn error" short:"l"`
 }
 
 func main() {

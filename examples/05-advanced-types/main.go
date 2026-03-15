@@ -14,8 +14,8 @@ import (
 
 type Config struct {
 	Server struct {
-		Host         string        `default:"localhost"  description:"server host"`
-		Port         int           `default:"8080"       description:"server port"`
+		Host         string        `default:"localhost"  description:"server host"  short:"H"`
+		Port         int           `default:"8080"       description:"server port"  short:"p"`
 		ReadTimeout  time.Duration `default:"30s"        description:"read timeout"`
 		WriteTimeout time.Duration `default:"30s"        description:"write timeout"`
 	}

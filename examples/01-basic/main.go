@@ -10,9 +10,9 @@ import (
 
 type Config struct {
 	AppName  string `default:"my-app"  description:"application name"`
-	LogLevel string `default:"info"    description:"logging level"`
-	Port     int    `default:"8080"    description:"HTTP listen port"`
-	Debug    bool   `default:"false"   description:"enable debug mode"`
+	LogLevel string `default:"info"    description:"logging level"   short:"l"`
+	Port     int    `default:"8080"    description:"HTTP listen port" short:"p"`
+	Debug    bool   `default:"false"   description:"enable debug mode" short:"d"`
 }
 
 func main() {

@@ -4,6 +4,7 @@ import (
 	"errors"
 	"flag"
 	"reflect"
+	"strings"
 	"testing"
 	"time"
 )
@@ -270,6 +271,98 @@ func TestApplyFlags_InvalidValue(t *testing.T) {
 	err := applyFlags(&cfg, fields, args)
 	if err == nil {
 		t.Fatal("applyFlags() expected error for invalid int value, got nil")
+	}
+}
+
+func TestApplyFlags_ShortFlags(t *testing.T) {
+	type Config struct {
+		Host  string `short:"H" description:"server host"`
+		Port  int    `short:"p" description:"server port"`
+		Debug bool   `short:"d" description:"enable debug"`
+	}
+
+	tests := []struct {
+		name string
+		args []string
+		want Config
+	}{
+		{
+			name: "short flag only",
+			args: []string{"-p", "8080"},
+			want: Config{Port: 8080},
+		},
+		{
+			name: "multiple short flags",
+			args: []string{"-H", "myhost", "-p", "9090", "-d", "true"},
+			want: Config{Host: "myhost", Port: 9090, Debug: true},
+		},
+		{
+			name: "mixed short and long flags",
+			args: []string{"-p", "3000", "--host", "mixedhost"},
+			want: Config{Host: "mixedhost", Port: 3000},
+		},
+		{
+			name: "long flag still works",
+			args: []string{"--port", "4000"},
+			want: Config{Port: 4000},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var cfg Config
+			v := reflect.ValueOf(&cfg).Elem()
+			fields := extractFields(v, "", nil)
+
+			if err := applyFlags(&cfg, fields, tt.args); err != nil {
+				t.Fatalf("applyFlags() error = %v", err)
+			}
+
+			if cfg != tt.want {
+				t.Errorf("applyFlags() got = %+v, want = %+v", cfg, tt.want)
+			}
+		})
+	}
+}
+
+func TestApplyFlags_ShortFlagOverridesEarlierSources(t *testing.T) {
+	type Config struct {
+		Port int `short:"p"`
+	}
+
+	// Pre-set value simulating an earlier source.
+	cfg := Config{Port: 5432}
+
+	args := []string{"-p", "9999"}
+
+	v := reflect.ValueOf(&cfg).Elem()
+	fields := extractFields(v, "", nil)
+
+	if err := applyFlags(&cfg, fields, args); err != nil {
+		t.Fatalf("applyFlags() error = %v", err)
+	}
+
+	if cfg.Port != 9999 {
+		t.Errorf("Port = %d, want 9999 (short flag should override)", cfg.Port)
+	}
+}
+
+func TestApplyFlags_DuplicateShortFlag(t *testing.T) {
+	type Config struct {
+		Port    int    `short:"p"`
+		Profile string `short:"p"`
+	}
+
+	var cfg Config
+	v := reflect.ValueOf(&cfg).Elem()
+	fields := extractFields(v, "", nil)
+
+	err := applyFlags(&cfg, fields, []string{"-p", "8080"})
+	if err == nil {
+		t.Fatal("applyFlags() expected error for duplicate short flag, got nil")
+	}
+	if !strings.Contains(err.Error(), "duplicate short flag") {
+		t.Errorf("error = %q, want it to mention duplicate short flag", err.Error())
 	}
 }
 

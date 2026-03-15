@@ -15,6 +15,7 @@ type fieldInfo struct {
 	HasDefault    bool         // Whether `default` tag was present
 	EnvName       string       // Env var name (explicit or auto-derived)
 	FlagName      string       // Flag name (explicit or auto-derived)
+	ShortFlag     string       // Short flag name (explicit only, e.g. "p" for -p)
 	ConfigKey     string       // Config file key (explicit or auto-derived)
 	Description   string       // From `description` tag
 	ValidateRules string       // From `validate` tag
@@ -74,6 +75,9 @@ func extractFields(v reflect.Value, prefix string, indexPrefix []int) []fieldInf
 		} else {
 			fi.FlagName = toFlagName(path)
 		}
+
+		// Short flag: explicit tag only, no auto-derivation.
+		fi.ShortFlag = sf.Tag.Get("short")
 
 		// Config key: explicit tag or auto-derived.
 		if keyTag := sf.Tag.Get("gonfig"); keyTag != "" {

@@ -316,6 +316,30 @@ func TestUsage_NoDefaultValue(t *testing.T) {
 	}
 }
 
+func TestUsage_ShortFlags(t *testing.T) {
+	type Config struct {
+		Port  int    `short:"p" default:"8080" description:"server port"`
+		Debug bool   `short:"d" description:"enable debug mode"`
+		Host  string `default:"localhost" description:"server host"` // no short flag
+	}
+
+	var cfg Config
+	output := Usage(&cfg)
+
+	// Short flags should display as "-p, --port".
+	if !strings.Contains(output, "-p, --port") {
+		t.Errorf("output should contain '-p, --port', got:\n%s", output)
+	}
+	if !strings.Contains(output, "-d, --debug") {
+		t.Errorf("output should contain '-d, --debug', got:\n%s", output)
+	}
+
+	// Host without short flag should display with alignment padding "    --host".
+	if !strings.Contains(output, "    --host") {
+		t.Errorf("output should contain '    --host' (padded), got:\n%s", output)
+	}
+}
+
 func TestUsage_ColumnAlignment(t *testing.T) {
 	type Config struct {
 		H    string `default:"a" description:"short"`
