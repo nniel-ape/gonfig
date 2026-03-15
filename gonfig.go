@@ -143,6 +143,11 @@ func Load(target any, opts ...Option) error {
 		}
 	}
 
+	// 5. Validate.
+	if err := validate(target, fields); err != nil {
+		return err
+	}
+
 	return nil
 }
 

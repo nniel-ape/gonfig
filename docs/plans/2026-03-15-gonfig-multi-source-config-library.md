@@ -196,15 +196,15 @@ port = 3306
 - [x] run tests — must pass before next task
 
 ### Task 11: Validation
-- [ ] implement `validate(target any, fields []fieldInfo) error` — run after all sources applied
-- [ ] implement validation rules: `required` (non-zero value), `min=N`/`max=N` (numeric range), `oneof=a,b,c` (allowed values)
-- [ ] collect all validation errors into a single `ValidationError` with per-field details (don't fail on first)
-- [ ] write tests for `required` — zero value fails, non-zero passes
-- [ ] write tests for `min`/`max` — int and float boundaries, out-of-range errors
-- [ ] write tests for `oneof` — valid value passes, invalid fails
-- [ ] write tests for combined rules — field with `required,min=1,max=100`
-- [ ] write tests for `ValidationError` — multiple fields fail, error message lists all
-- [ ] run tests — must pass before next task
+- [x] implement `validate(target any, fields []fieldInfo) error` — run after all sources applied
+- [x] implement validation rules: `required` (non-zero value), `min=N`/`max=N` (numeric range), `oneof=a,b,c` (allowed values)
+- [x] collect all validation errors into a single `ValidationError` with per-field details (don't fail on first)
+- [x] write tests for `required` — zero value fails, non-zero passes
+- [x] write tests for `min`/`max` — int and float boundaries, out-of-range errors
+- [x] write tests for `oneof` — valid value passes, invalid fails
+- [x] write tests for combined rules — field with `required,min=1,max=100`
+- [x] write tests for `ValidationError` — multiple fields fail, error message lists all
+- [x] run tests — must pass before next task
 
 ### Task 12: Help/usage generation
 - [ ] implement `Usage(target any, opts ...Option) string` — generates formatted usage text from struct metadata
