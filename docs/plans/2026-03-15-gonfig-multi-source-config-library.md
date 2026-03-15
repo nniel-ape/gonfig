@@ -124,13 +124,13 @@ port = 3306
 - [x] run tests — must pass before next task
 
 ### Task 3: Default provider
-- [ ] implement `applyDefaults(target any, fields []fieldInfo) error` — sets field values from `default` tag
-- [ ] implement type conversion: `setFieldValue(field reflect.Value, raw string) error` for string, int, int64, float64, bool, time.Duration, `[]string`, `[]int`
-- [ ] write tests for `applyDefaults` — string, int, bool, float, duration defaults
-- [ ] write tests for `applyDefaults` — missing default tag (field unchanged)
-- [ ] write tests for `applyDefaults` — invalid default value for type (expect error)
-- [ ] write tests for `setFieldValue` — all supported types including edge cases (empty string, zero, negative)
-- [ ] run tests — must pass before next task
+- [x] implement `applyDefaults(target any, fields []fieldInfo) error` — sets field values from `default` tag
+- [x] implement type conversion: `setFieldValue(field reflect.Value, raw string) error` for string, int, int64, float64, bool, time.Duration, `[]string`, `[]int`
+- [x] write tests for `applyDefaults` — string, int, bool, float, duration defaults
+- [x] write tests for `applyDefaults` — missing default tag (field unchanged)
+- [x] write tests for `applyDefaults` — invalid default value for type (expect error)
+- [x] write tests for `setFieldValue` — all supported types including edge cases (empty string, zero, negative)
+- [x] run tests — must pass before next task
 
 ### Task 4: File provider — JSON
 - [ ] implement `loadFile(target any, path string, fields []fieldInfo) error` — detect format from extension, decode into `map[string]any`, then map onto struct fields
