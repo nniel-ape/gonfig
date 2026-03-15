@@ -140,7 +140,7 @@ func TestAcceptance_PriorityOrder_AllSourcesSameKey(t *testing.T) {
 
 	dir := t.TempDir()
 	cfgFile := filepath.Join(dir, "config.json")
-	if err := os.WriteFile(cfgFile, []byte(`{"value":"from-file"}`), 0644); err != nil {
+	if err := os.WriteFile(cfgFile, []byte(`{"value":"from-file"}`), 0o644); err != nil {
 		t.Fatal(err)
 	}
 
@@ -224,7 +224,7 @@ db:
   port: 3306
   database: prod
 `
-	if err := os.WriteFile(cfgFile, []byte(yamlContent), 0644); err != nil {
+	if err := os.WriteFile(cfgFile, []byte(yamlContent), 0o644); err != nil {
 		t.Fatal(err)
 	}
 
@@ -569,7 +569,7 @@ tags:
   - web
   - api
 `
-	if err := os.WriteFile(cfgFile, []byte(yamlContent), 0644); err != nil {
+	if err := os.WriteFile(cfgFile, []byte(yamlContent), 0o644); err != nil {
 		t.Fatal(err)
 	}
 

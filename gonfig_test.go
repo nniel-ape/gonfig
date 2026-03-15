@@ -23,7 +23,7 @@ func TestLoad_AllSourcesCombined_PriorityOrder(t *testing.T) {
 	// Create a temp YAML config file that sets db.host and log_level.
 	dir := t.TempDir()
 	cfgFile := filepath.Join(dir, "config.yaml")
-	if err := os.WriteFile(cfgFile, []byte("db:\n  host: filehost\nlog_level: warn\n"), 0644); err != nil {
+	if err := os.WriteFile(cfgFile, []byte("db:\n  host: filehost\nlog_level: warn\n"), 0o644); err != nil {
 		t.Fatal(err)
 	}
 
@@ -86,7 +86,7 @@ func TestLoad_OnlyDefaults(t *testing.T) {
 func TestLoad_FileAndEnvOverride(t *testing.T) {
 	dir := t.TempDir()
 	cfgFile := filepath.Join(dir, "config.json")
-	if err := os.WriteFile(cfgFile, []byte(`{"db":{"host":"jsonhost","port":3306},"log_level":"debug"}`), 0644); err != nil {
+	if err := os.WriteFile(cfgFile, []byte(`{"db":{"host":"jsonhost","port":3306},"log_level":"debug"}`), 0o644); err != nil {
 		t.Fatal(err)
 	}
 
@@ -120,7 +120,7 @@ func TestLoad_FileAndEnvOverride(t *testing.T) {
 func TestLoad_FlagOverridesEverything(t *testing.T) {
 	dir := t.TempDir()
 	cfgFile := filepath.Join(dir, "config.toml")
-	if err := os.WriteFile(cfgFile, []byte("log_level = \"warn\"\n\n[db]\nhost = \"tomlhost\"\nport = 9999\n"), 0644); err != nil {
+	if err := os.WriteFile(cfgFile, []byte("log_level = \"warn\"\n\n[db]\nhost = \"tomlhost\"\nport = 9999\n"), 0o644); err != nil {
 		t.Fatal(err)
 	}
 
@@ -295,12 +295,12 @@ func TestLoad_MultipleFiles_LaterOverridesEarlier(t *testing.T) {
 	dir := t.TempDir()
 
 	file1 := filepath.Join(dir, "base.json")
-	if err := os.WriteFile(file1, []byte(`{"db":{"host":"base","port":1111},"log_level":"info"}`), 0644); err != nil {
+	if err := os.WriteFile(file1, []byte(`{"db":{"host":"base","port":1111},"log_level":"info"}`), 0o644); err != nil {
 		t.Fatal(err)
 	}
 
 	file2 := filepath.Join(dir, "override.json")
-	if err := os.WriteFile(file2, []byte(`{"db":{"host":"override"}}`), 0644); err != nil {
+	if err := os.WriteFile(file2, []byte(`{"db":{"host":"override"}}`), 0o644); err != nil {
 		t.Fatal(err)
 	}
 
@@ -326,7 +326,7 @@ func TestLoad_InterleavedFileContentAndFile_PreservesOrder(t *testing.T) {
 
 	// File sets db.host to "fromfile"
 	cfgFile := filepath.Join(dir, "config.json")
-	if err := os.WriteFile(cfgFile, []byte(`{"db":{"host":"fromfile"}}`), 0644); err != nil {
+	if err := os.WriteFile(cfgFile, []byte(`{"db":{"host":"fromfile"}}`), 0o644); err != nil {
 		t.Fatal(err)
 	}
 
@@ -348,7 +348,7 @@ func TestLoad_InterleavedFileAndFileContent_PreservesOrder(t *testing.T) {
 
 	// File sets db.host to "fromfile"
 	cfgFile := filepath.Join(dir, "config.json")
-	if err := os.WriteFile(cfgFile, []byte(`{"db":{"host":"fromfile"}}`), 0644); err != nil {
+	if err := os.WriteFile(cfgFile, []byte(`{"db":{"host":"fromfile"}}`), 0o644); err != nil {
 		t.Fatal(err)
 	}
 
@@ -417,7 +417,7 @@ func TestLoad_WithTestdataFiles(t *testing.T) {
 func TestLoad_UnsupportedFileFormat(t *testing.T) {
 	dir := t.TempDir()
 	cfgFile := filepath.Join(dir, "config.ini")
-	if err := os.WriteFile(cfgFile, []byte("[section]\nkey=value\n"), 0644); err != nil {
+	if err := os.WriteFile(cfgFile, []byte("[section]\nkey=value\n"), 0o644); err != nil {
 		t.Fatal(err)
 	}
 
@@ -438,7 +438,7 @@ func swapAutoHelp(t *testing.T) (exitCode *int, printed *string) {
 	oldExit := osExit
 	oldPrint := printFn
 
-	var code int = -1
+	code := -1
 	var out string
 	osExit = func(c int) { code = c }
 	printFn = func(s string) { out = s }

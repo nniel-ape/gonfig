@@ -443,7 +443,6 @@ func TestValidateNoRules(t *testing.T) {
 	rv := reflect.ValueOf(cfg).Elem()
 	fields := extractFields(rv, "", nil)
 	err := validate(cfg, fields)
-
 	if err != nil {
 		t.Fatalf("expected no error for struct without validate tags, got %v", err)
 	}

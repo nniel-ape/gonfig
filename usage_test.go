@@ -8,11 +8,11 @@ import (
 
 func TestUsage_FlatStruct(t *testing.T) {
 	type Config struct {
-		Host     string        `default:"localhost" description:"server host"`
-		Port     int           `default:"8080"      description:"server port"`
-		Debug    bool          `default:"false"     description:"enable debug mode"`
-		Timeout  time.Duration `default:"30s"       description:"request timeout"`
-		Rate     float64       `default:"1.5"       description:"rate limit"`
+		Host    string        `default:"localhost" description:"server host"`
+		Port    int           `default:"8080"      description:"server port"`
+		Debug   bool          `default:"false"     description:"enable debug mode"`
+		Timeout time.Duration `default:"30s"       description:"request timeout"`
+		Rate    float64       `default:"1.5"       description:"rate limit"`
 	}
 
 	var cfg Config
@@ -219,9 +219,9 @@ func TestUsage_EmptyStruct(t *testing.T) {
 
 func TestUsage_SliceAndMapTypes(t *testing.T) {
 	type Config struct {
-		Hosts   []string          `description:"list of hosts"`
-		Ports   []int             `description:"list of ports"`
-		Labels  map[string]string `description:"key-value labels"`
+		Hosts  []string          `description:"list of hosts"`
+		Ports  []int             `description:"list of ports"`
+		Labels map[string]string `description:"key-value labels"`
 	}
 
 	var cfg Config
@@ -342,7 +342,7 @@ func TestUsage_ShortFlags(t *testing.T) {
 
 func TestUsage_ColumnAlignment(t *testing.T) {
 	type Config struct {
-		H    string `default:"a" description:"short"`
+		H             string `default:"a" description:"short"`
 		LongFieldName string `default:"something-longer" description:"long desc"`
 	}
 

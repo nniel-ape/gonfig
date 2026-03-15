@@ -16,9 +16,9 @@ func TestApplyEnv_BasicTypes(t *testing.T) {
 	}
 
 	tests := []struct {
-		name   string
-		envs   map[string]string
-		want   Config
+		name string
+		envs map[string]string
+		want Config
 	}{
 		{
 			name: "string value",

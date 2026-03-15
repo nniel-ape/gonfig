@@ -41,7 +41,6 @@ func main() {
 		gonfig.WithEnvPrefix("APP"),
 		gonfig.WithFlags(os.Args[1:]),
 	)
-
 	if err != nil {
 		log.Fatal(err)
 	}

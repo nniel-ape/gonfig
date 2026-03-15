@@ -167,7 +167,7 @@ func setFieldFromAny(field reflect.Value, val any) error {
 			if v != math.Trunc(v) {
 				return fmt.Errorf("cannot convert %v to integer: value is not integral", v)
 			}
-			if v >= 1<<63 || v < -(1 << 63) {
+			if v >= 1<<63 || v < -(1<<63) {
 				return fmt.Errorf("cannot convert %v to integer: value out of range", v)
 			}
 			n := int64(v)
@@ -249,7 +249,7 @@ func setSliceFromAny(field reflect.Value, val any, typ reflect.Type) error {
 				if v != math.Trunc(v) {
 					return fmt.Errorf("cannot convert %v to integer in array element %d: value is not integral", v, i)
 				}
-				if v >= 1<<63 || v < -(1 << 63) {
+				if v >= 1<<63 || v < -(1<<63) {
 					return fmt.Errorf("cannot convert %v to integer in array element %d: value out of range", v, i)
 				}
 				n := int64(v)

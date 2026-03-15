@@ -133,9 +133,9 @@ func TestExtractFields_ExplicitTagOverrides(t *testing.T) {
 		configKey string
 	}{
 		{0, "CUSTOM_HOST", "custom-host", "custom_host"},
-		{1, "MY_PORT", "port", "port"},        // only env overridden
-		{2, "NAME", "app-name", "name"},        // only flag overridden
-		{3, "KEY", "key", "api_key"},            // only gonfig overridden
+		{1, "MY_PORT", "port", "port"},  // only env overridden
+		{2, "NAME", "app-name", "name"}, // only flag overridden
+		{3, "KEY", "key", "api_key"},    // only gonfig overridden
 	}
 
 	for _, tt := range tests {
@@ -192,7 +192,7 @@ func TestExtractFields_Tags(t *testing.T) {
 func TestExtractFields_UnexportedFieldsSkipped(t *testing.T) {
 	type Config struct {
 		Host     string
-		internal string //nolint:unused
+		internal string
 	}
 
 	var cfg Config
