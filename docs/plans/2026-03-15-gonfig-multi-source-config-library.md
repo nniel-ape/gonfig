@@ -207,13 +207,13 @@ port = 3306
 - [x] run tests — must pass before next task
 
 ### Task 12: Help/usage generation
-- [ ] implement `Usage(target any, opts ...Option) string` — generates formatted usage text from struct metadata
-- [ ] format: flag name, env var name, type, default, description — aligned columns
-- [ ] group by nested struct sections (e.g., "DB:" header)
-- [ ] write tests for `Usage` — flat struct output matches expected text
-- [ ] write tests for `Usage` — nested struct with section headers
-- [ ] write tests for `Usage` — fields without description tag (still listed, no description)
-- [ ] run tests — must pass before next task
+- [x] implement `Usage(target any, opts ...Option) string` — generates formatted usage text from struct metadata
+- [x] format: flag name, env var name, type, default, description — aligned columns
+- [x] group by nested struct sections (e.g., "DB:" header)
+- [x] write tests for `Usage` — flat struct output matches expected text
+- [x] write tests for `Usage` — nested struct with section headers
+- [x] write tests for `Usage` — fields without description tag (still listed, no description)
+- [x] run tests — must pass before next task
 
 ### Task 13: Verify acceptance criteria
 - [ ] verify all formats work: JSON, YAML, TOML, env, flags — each tested in isolation and combined
