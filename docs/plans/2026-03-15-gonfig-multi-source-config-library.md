@@ -114,14 +114,14 @@ port = 3306
 - [x] run tests — must pass before next task
 
 ### Task 2: Struct field info extractor (reflection core)
-- [ ] define `fieldInfo` struct: `Name`, `Path` (dot-separated), `Type`, `DefaultVal`, `EnvName`, `FlagName`, `ConfigKey`, `Description`, `ValidateRules`, `Index` path for reflect access
-- [ ] implement `extractFields(v reflect.Value, prefix string) []fieldInfo` — recursively walks struct, extracts tag values, auto-derives env/flag/config names from field path
-- [ ] implement name derivation helpers: `toEnvName(path string) string` (DB.Host → DB_HOST), `toFlagName(path string) string` (DB.Host → db-host), `toConfigKey(path string) string` (DB.Host → db.host)
-- [ ] write tests for `extractFields` with flat struct (multiple field types: string, int, bool, float)
-- [ ] write tests for `extractFields` with nested struct (verify dot-path generation)
-- [ ] write tests for `extractFields` with explicit tag overrides (env, flag, gonfig tags)
-- [ ] write tests for name derivation helpers (camelCase, multi-word, acronyms)
-- [ ] run tests — must pass before next task
+- [x] define `fieldInfo` struct: `Name`, `Path` (dot-separated), `Type`, `DefaultVal`, `EnvName`, `FlagName`, `ConfigKey`, `Description`, `ValidateRules`, `Index` path for reflect access
+- [x] implement `extractFields(v reflect.Value, prefix string) []fieldInfo` — recursively walks struct, extracts tag values, auto-derives env/flag/config names from field path
+- [x] implement name derivation helpers: `toEnvName(path string) string` (DB.Host → DB_HOST), `toFlagName(path string) string` (DB.Host → db-host), `toConfigKey(path string) string` (DB.Host → db.host)
+- [x] write tests for `extractFields` with flat struct (multiple field types: string, int, bool, float)
+- [x] write tests for `extractFields` with nested struct (verify dot-path generation)
+- [x] write tests for `extractFields` with explicit tag overrides (env, flag, gonfig tags)
+- [x] write tests for name derivation helpers (camelCase, multi-word, acronyms)
+- [x] run tests — must pass before next task
 
 ### Task 3: Default provider
 - [ ] implement `applyDefaults(target any, fields []fieldInfo) error` — sets field values from `default` tag
