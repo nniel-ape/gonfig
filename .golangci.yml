@@ -12,7 +12,8 @@ formatters:
     - goimports
   settings:
     goimports:
-      local-prefixes: github.com/nniel-ape/gonfig
+      local-prefixes:
+        - github.com/nniel-ape/gonfig
 
 linters:
   default: none
