@@ -133,14 +133,14 @@ port = 3306
 - [x] run tests — must pass before next task
 
 ### Task 4: File provider — JSON
-- [ ] implement `loadFile(target any, path string, fields []fieldInfo) error` — detect format from extension, decode into `map[string]any`, then map onto struct fields
-- [ ] implement `decodeJSON(r io.Reader) (map[string]any, error)` using `encoding/json`
-- [ ] implement `applyMap(target any, data map[string]any, fields []fieldInfo) error` — walk flat/nested map, match to fields by config key, set values
-- [ ] create `testdata/valid.json`, `testdata/nested.json`, `testdata/empty.json`, `testdata/invalid.json` fixtures
-- [ ] write tests for JSON loading — flat config
-- [ ] write tests for JSON loading — nested config
-- [ ] write tests for JSON loading — file not found, invalid JSON (error cases)
-- [ ] run tests — must pass before next task
+- [x] implement `loadFile(target any, path string, fields []fieldInfo) error` — detect format from extension, decode into `map[string]any`, then map onto struct fields
+- [x] implement `decodeJSON(r io.Reader) (map[string]any, error)` using `encoding/json`
+- [x] implement `applyMap(target any, data map[string]any, fields []fieldInfo) error` — walk flat/nested map, match to fields by config key, set values
+- [x] create `testdata/valid.json`, `testdata/nested.json`, `testdata/empty.json`, `testdata/invalid.json` fixtures
+- [x] write tests for JSON loading — flat config
+- [x] write tests for JSON loading — nested config
+- [x] write tests for JSON loading — file not found, invalid JSON (error cases)
+- [x] run tests — must pass before next task
 
 ### Task 5: File provider — YAML
 - [ ] add `gopkg.in/yaml.v3` dependency

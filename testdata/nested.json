@@ -1,0 +1,8 @@
+{
+  "db": {
+    "host": "dbhost",
+    "port": 5432
+  },
+  "log_level": "warn",
+  "debug": false
+}
