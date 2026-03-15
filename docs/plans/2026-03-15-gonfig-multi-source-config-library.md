@@ -185,15 +185,15 @@ port = 3306
 - [x] run tests — must pass before next task
 
 ### Task 10: Load orchestrator and public API
-- [ ] define option types: `Option`, `WithEnvPrefix(string)`, `WithFile(string)`, `WithFlags([]string)`, `WithFileContent([]byte, Format)`
-- [ ] implement `Load(target any, opts ...Option) error` — validate target is pointer-to-struct, extract fields, then apply in order: defaults → file → env → flags
-- [ ] define exported error types: `ErrInvalidTarget`, `ErrFileNotFound`, `ErrParse`, `ErrValidation`
-- [ ] write tests for `Load` end-to-end — all sources combined, verify priority order
-- [ ] write tests for `Load` — only defaults (no file, no env, no flags)
-- [ ] write tests for `Load` — file + env override
-- [ ] write tests for `Load` — flag overrides everything
-- [ ] write tests for `Load` — error cases (nil target, non-pointer, non-struct)
-- [ ] run tests — must pass before next task
+- [x] define option types: `Option`, `WithEnvPrefix(string)`, `WithFile(string)`, `WithFlags([]string)`, `WithFileContent([]byte, Format)`
+- [x] implement `Load(target any, opts ...Option) error` — validate target is pointer-to-struct, extract fields, then apply in order: defaults → file → env → flags
+- [x] define exported error types: `ErrInvalidTarget`, `ErrFileNotFound`, `ErrParse`, `ErrValidation`
+- [x] write tests for `Load` end-to-end — all sources combined, verify priority order
+- [x] write tests for `Load` — only defaults (no file, no env, no flags)
+- [x] write tests for `Load` — file + env override
+- [x] write tests for `Load` — flag overrides everything
+- [x] write tests for `Load` — error cases (nil target, non-pointer, non-struct)
+- [x] run tests — must pass before next task
 
 ### Task 11: Validation
 - [ ] implement `validate(target any, fields []fieldInfo) error` — run after all sources applied
