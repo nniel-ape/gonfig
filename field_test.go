@@ -111,6 +111,89 @@ func TestExtractFields_NestedStruct(t *testing.T) {
 	}
 }
 
+func TestExtractFields_StructGonfigTag(t *testing.T) {
+	type Strategy struct {
+		Name   string
+		Weight float64
+	}
+	type Config struct {
+		Strategy Strategy `gonfig:"latemomentum"`
+	}
+
+	var cfg Config
+	fields := extractFields(reflect.ValueOf(cfg), "", nil)
+
+	if len(fields) != 2 {
+		t.Fatalf("expected 2 fields, got %d", len(fields))
+	}
+
+	tests := []struct {
+		idx       int
+		name      string
+		path      string
+		envName   string
+		flagName  string
+		configKey string
+	}{
+		{0, "Name", "latemomentum.Name", "LATEMOMENTUM_NAME", "latemomentum-name", "latemomentum.name"},
+		{1, "Weight", "latemomentum.Weight", "LATEMOMENTUM_WEIGHT", "latemomentum-weight", "latemomentum.weight"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.path, func(t *testing.T) {
+			f := fields[tt.idx]
+			if f.Name != tt.name {
+				t.Errorf("Name = %q, want %q", f.Name, tt.name)
+			}
+			if f.Path != tt.path {
+				t.Errorf("Path = %q, want %q", f.Path, tt.path)
+			}
+			if f.EnvName != tt.envName {
+				t.Errorf("EnvName = %q, want %q", f.EnvName, tt.envName)
+			}
+			if f.FlagName != tt.flagName {
+				t.Errorf("FlagName = %q, want %q", f.FlagName, tt.flagName)
+			}
+			if f.ConfigKey != tt.configKey {
+				t.Errorf("ConfigKey = %q, want %q", f.ConfigKey, tt.configKey)
+			}
+		})
+	}
+}
+
+func TestExtractFields_NestedStructGonfigTags(t *testing.T) {
+	type Inner struct {
+		Value string
+	}
+	type Mid struct {
+		Inner Inner `gonfig:"custom_inner"`
+	}
+	type Config struct {
+		Mid Mid `gonfig:"top"`
+	}
+
+	var cfg Config
+	fields := extractFields(reflect.ValueOf(cfg), "", nil)
+
+	if len(fields) != 1 {
+		t.Fatalf("expected 1 field, got %d", len(fields))
+	}
+
+	f := fields[0]
+	if f.Path != "top.custom_inner.Value" {
+		t.Errorf("Path = %q, want %q", f.Path, "top.custom_inner.Value")
+	}
+	if f.ConfigKey != "top.custom_inner.value" {
+		t.Errorf("ConfigKey = %q, want %q", f.ConfigKey, "top.custom_inner.value")
+	}
+	if f.EnvName != "TOP_CUSTOM_INNER_VALUE" {
+		t.Errorf("EnvName = %q, want %q", f.EnvName, "TOP_CUSTOM_INNER_VALUE")
+	}
+	if f.FlagName != "top-custom-inner-value" {
+		t.Errorf("FlagName = %q, want %q", f.FlagName, "top-custom-inner-value")
+	}
+}
+
 func TestExtractFields_ExplicitTagOverrides(t *testing.T) {
 	type Config struct {
 		Host string `env:"CUSTOM_HOST" flag:"custom-host" gonfig:"custom_host"`
@@ -339,6 +422,14 @@ func TestCamelToSnake(t *testing.T) {
 		{"Ab", "Ab"},
 		{"AB", "AB"},
 		{"ABc", "A_Bc"},
+		// Acronym-aware cases.
+		{"APIURL", "API_URL"},
+		{"CLOBURL", "CLOB_URL"},
+		{"RPCURLs", "RPC_URLs"},
+		{"MarketIDs", "Market_IDs"},
+		{"HTTPAPI", "HTTP_API"},
+		{"TCPIP", "TCP_IP"},
+		{"URLParser", "URL_Parser"},
 	}
 
 	for _, tt := range tests {
