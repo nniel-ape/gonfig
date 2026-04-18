@@ -49,6 +49,7 @@ type options struct {
 	hasFlags        bool
 	disableAutoHelp bool
 	skipValidation  bool
+	remainingArgs   *[]string
 }
 
 // osExit and printFn are package-level vars to allow testing of auto-help behavior.
@@ -110,6 +111,14 @@ func WithAutoHelp(enabled bool) Option {
 func WithoutValidation() Option {
 	return func(o *options) {
 		o.skipValidation = true
+	}
+}
+
+// WithRemainingArgs captures positional arguments left after flag parsing into dst.
+// Only meaningful when used together with WithFlags.
+func WithRemainingArgs(dst *[]string) Option {
+	return func(o *options) {
+		o.remainingArgs = dst
 	}
 }
 
@@ -198,7 +207,7 @@ func applyFileSource(target any, fs *fileSource, fields []fieldInfo) error {
 
 // handleFlags parses and applies flags, handling auto-help if enabled.
 func handleFlags(target any, o *options, fields []fieldInfo, opts []Option) error {
-	err := applyFlags(target, fields, o.flagArgs)
+	err := applyFlags(target, fields, o.flagArgs, o.remainingArgs)
 	if err == nil {
 		return nil
 	}

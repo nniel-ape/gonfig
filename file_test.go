@@ -996,7 +996,7 @@ func TestSlice_FlagCommaSeparated(t *testing.T) {
 
 	args := []string{"--tags", "web,api,v2", "--ports", "8080,8443,9090", "--rates", "1.5,2.7,3.14"}
 
-	if err := applyFlags(&cfg, fields, args); err != nil {
+	if err := applyFlags(&cfg, fields, args, nil); err != nil {
 		t.Fatalf("applyFlags: unexpected error: %v", err)
 	}
 
@@ -1216,7 +1216,7 @@ func TestSlice_DurationFlagCommaSeparated(t *testing.T) {
 
 	args := []string{"--timeouts", "5s,30s,2m"}
 
-	if err := applyFlags(&cfg, fields, args); err != nil {
+	if err := applyFlags(&cfg, fields, args, nil); err != nil {
 		t.Fatalf("applyFlags: unexpected error: %v", err)
 	}
 
@@ -1256,7 +1256,7 @@ func TestSlice_BoolFlagCommaSeparated(t *testing.T) {
 
 	args := []string{"--flags", "true,false,true"}
 
-	if err := applyFlags(&cfg, fields, args); err != nil {
+	if err := applyFlags(&cfg, fields, args, nil); err != nil {
 		t.Fatalf("applyFlags: unexpected error: %v", err)
 	}
 
@@ -1307,7 +1307,7 @@ func TestSlice_DurationPriorityChain(t *testing.T) {
 
 	// Step 4: flags override env
 	args := []string{"--timeouts", "2m,3m"}
-	if err := applyFlags(&cfg, fields, args); err != nil {
+	if err := applyFlags(&cfg, fields, args, nil); err != nil {
 		t.Fatalf("applyFlags: unexpected error: %v", err)
 	}
 	want = []time.Duration{2 * time.Minute, 3 * time.Minute}

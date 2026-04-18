@@ -10,7 +10,7 @@ import (
 // applyFlags parses command-line flags from args and applies only explicitly-set
 // flags to the target struct fields. Flags that are not provided in args do not
 // modify the struct, preserving values set by earlier sources (file, env).
-func applyFlags(target any, fields []fieldInfo, args []string) error {
+func applyFlags(target any, fields []fieldInfo, args []string, remaining *[]string) error {
 	fs := flag.NewFlagSet("gonfig", flag.ContinueOnError)
 	fs.SetOutput(io.Discard)
 
@@ -41,6 +41,10 @@ func applyFlags(target any, fields []fieldInfo, args []string) error {
 
 	if err := fs.Parse(args); err != nil {
 		return fmt.Errorf("flag parsing: %w", err)
+	}
+
+	if remaining != nil {
+		*remaining = fs.Args()
 	}
 
 	// Collect which flags were explicitly set on the command line.

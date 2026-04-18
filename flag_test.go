@@ -61,7 +61,7 @@ func TestApplyFlags_BasicTypes(t *testing.T) {
 			v := reflect.ValueOf(&cfg).Elem()
 			fields := extractFields(v, "", nil)
 
-			if err := applyFlags(&cfg, fields, tt.args); err != nil {
+			if err := applyFlags(&cfg, fields, tt.args, nil); err != nil {
 				t.Fatalf("applyFlags() error = %v", err)
 			}
 
@@ -92,7 +92,7 @@ func TestApplyFlags_OnlyExplicitOverride(t *testing.T) {
 	v := reflect.ValueOf(&cfg).Elem()
 	fields := extractFields(v, "", nil)
 
-	if err := applyFlags(&cfg, fields, args); err != nil {
+	if err := applyFlags(&cfg, fields, args, nil); err != nil {
 		t.Fatalf("applyFlags() error = %v", err)
 	}
 
@@ -127,7 +127,7 @@ func TestApplyFlags_ZeroValueExplicitlySet(t *testing.T) {
 	v := reflect.ValueOf(&cfg).Elem()
 	fields := extractFields(v, "", nil)
 
-	if err := applyFlags(&cfg, fields, args); err != nil {
+	if err := applyFlags(&cfg, fields, args, nil); err != nil {
 		t.Fatalf("applyFlags() error = %v", err)
 	}
 
@@ -157,7 +157,7 @@ func TestApplyFlags_NestedStruct(t *testing.T) {
 	v := reflect.ValueOf(&cfg).Elem()
 	fields := extractFields(v, "", nil)
 
-	if err := applyFlags(&cfg, fields, args); err != nil {
+	if err := applyFlags(&cfg, fields, args, nil); err != nil {
 		t.Fatalf("applyFlags() error = %v", err)
 	}
 
@@ -184,7 +184,7 @@ func TestApplyFlags_ExplicitFlagTag(t *testing.T) {
 	v := reflect.ValueOf(&cfg).Elem()
 	fields := extractFields(v, "", nil)
 
-	if err := applyFlags(&cfg, fields, args); err != nil {
+	if err := applyFlags(&cfg, fields, args, nil); err != nil {
 		t.Fatalf("applyFlags() error = %v", err)
 	}
 
@@ -207,7 +207,7 @@ func TestApplyFlags_UnknownFlag(t *testing.T) {
 	v := reflect.ValueOf(&cfg).Elem()
 	fields := extractFields(v, "", nil)
 
-	err := applyFlags(&cfg, fields, args)
+	err := applyFlags(&cfg, fields, args, nil)
 	if err == nil {
 		t.Fatal("applyFlags() expected error for unknown flag, got nil")
 	}
@@ -225,7 +225,7 @@ func TestApplyFlags_Help(t *testing.T) {
 	v := reflect.ValueOf(&cfg).Elem()
 	fields := extractFields(v, "", nil)
 
-	err := applyFlags(&cfg, fields, args)
+	err := applyFlags(&cfg, fields, args, nil)
 	if err == nil {
 		t.Fatal("applyFlags() expected error for --help, got nil")
 	}
@@ -245,7 +245,7 @@ func TestApplyFlags_NoArgs(t *testing.T) {
 	v := reflect.ValueOf(&cfg).Elem()
 	fields := extractFields(v, "", nil)
 
-	if err := applyFlags(&cfg, fields, nil); err != nil {
+	if err := applyFlags(&cfg, fields, nil, nil); err != nil {
 		t.Fatalf("applyFlags() error = %v", err)
 	}
 
@@ -268,7 +268,7 @@ func TestApplyFlags_InvalidValue(t *testing.T) {
 	v := reflect.ValueOf(&cfg).Elem()
 	fields := extractFields(v, "", nil)
 
-	err := applyFlags(&cfg, fields, args)
+	err := applyFlags(&cfg, fields, args, nil)
 	if err == nil {
 		t.Fatal("applyFlags() expected error for invalid int value, got nil")
 	}
@@ -314,7 +314,7 @@ func TestApplyFlags_ShortFlags(t *testing.T) {
 			v := reflect.ValueOf(&cfg).Elem()
 			fields := extractFields(v, "", nil)
 
-			if err := applyFlags(&cfg, fields, tt.args); err != nil {
+			if err := applyFlags(&cfg, fields, tt.args, nil); err != nil {
 				t.Fatalf("applyFlags() error = %v", err)
 			}
 
@@ -338,7 +338,7 @@ func TestApplyFlags_ShortFlagOverridesEarlierSources(t *testing.T) {
 	v := reflect.ValueOf(&cfg).Elem()
 	fields := extractFields(v, "", nil)
 
-	if err := applyFlags(&cfg, fields, args); err != nil {
+	if err := applyFlags(&cfg, fields, args, nil); err != nil {
 		t.Fatalf("applyFlags() error = %v", err)
 	}
 
@@ -357,7 +357,7 @@ func TestApplyFlags_DuplicateShortFlag(t *testing.T) {
 	v := reflect.ValueOf(&cfg).Elem()
 	fields := extractFields(v, "", nil)
 
-	err := applyFlags(&cfg, fields, []string{"-p", "8080"})
+	err := applyFlags(&cfg, fields, []string{"-p", "8080"}, nil)
 	if err == nil {
 		t.Fatal("applyFlags() expected error for duplicate short flag, got nil")
 	}
@@ -378,7 +378,7 @@ func TestApplyFlags_EqualsSyntax(t *testing.T) {
 	v := reflect.ValueOf(&cfg).Elem()
 	fields := extractFields(v, "", nil)
 
-	if err := applyFlags(&cfg, fields, args); err != nil {
+	if err := applyFlags(&cfg, fields, args, nil); err != nil {
 		t.Fatalf("applyFlags() error = %v", err)
 	}
 
