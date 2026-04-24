@@ -187,8 +187,9 @@ formatters:
 
   settings:
     goimports:
-      local-prefixes: weave
+      local-prefixes:
+        - github.com/nniel-ape/gonfig
 
     gofumpt:
-      module-path: weave
+      module-path: github.com/nniel-ape/gonfig
       extra-rules: true
