@@ -1,145 +1,194 @@
 version: "2"
-
 run:
-  timeout: 5m
-  tests: true
-  modules-download-mode: readonly
+  concurrency: 4
   go: "1.22"
-
-formatters:
-  enable:
-    - gofumpt
-    - goimports
-  settings:
-    goimports:
-      local-prefixes:
-        - github.com/nniel-ape/gonfig
-
 linters:
   default: none
   enable:
-    # Bug detection
+    - asciicheck
+    - bidichk
     - bodyclose
+    - copyloopvar
+    - dupl
     - durationcheck
     - errcheck
-    - govet
-    - makezero
-    - nilerr
-    - noctx
-    - rowserrcheck
-    - sqlclosecheck
-    - staticcheck
-
-    # Security
-    - gosec
-    - bidichk
-
-    # Performance
-    - prealloc
-
-    # Style & consistency
-    - copyloopvar
-    - dupword
     - errname
     - errorlint
     - exhaustive
     - fatcontext
-    - forbidigo
+    - gochecknoinits
     - goconst
     - gocritic
-    - goprintffuncname
-    - grouper
+    - gocyclo
+    - godoclint
+    - gosec
+    - govet
     - ineffassign
-    - mirror
+    - intrange
+    - makezero
     - misspell
+    - modernize
     - nakedret
+    - nestif
+    - nilerr
+    - nilnil
+    - noctx
     - nolintlint
+    - perfsprint
     - predeclared
+    - prealloc
     - reassign
     - revive
+    - sqlclosecheck
+    - staticcheck
+    - testifylint
+    - tparallel
     - unconvert
     - unparam
     - unused
     - usestdlibvars
+    - wastedassign
     - whitespace
-
-    # Complexity
-    - cyclop
-    - gocognit
-    - nestif
-
-  exclusions:
-    presets:
-      - std-error-handling
-      - common-false-positives
-    rules:
-      - path: _test\.go
-        linters:
-          - errcheck
-          - gosec
-          - goconst
-          - unparam
-          - prealloc
-          - cyclop
-          - gocognit
-          - forbidigo
-      - path: examples/
-        linters:
-          - forbidigo
-          - errcheck
+    - wrapcheck
+    - wsl_v5
 
   settings:
-    cyclop:
-      max-complexity: 15
-    errcheck:
-      check-type-assertions: true
-      check-blank: true
     exhaustive:
       default-signifies-exhaustive: true
-    gocognit:
-      min-complexity: 20
+    nolintlint:
+      require-explanation: true
+      require-specific: true
+    dupl:
+      threshold: 100
     goconst:
-      min-len: 3
-      min-occurrences: 3
+      min-len: 2
+      min-occurrences: 7
     gocritic:
+      disabled-checks:
+        - wrapperFunc
+        - hugeParam
+        - rangeValCopy
       enabled-tags:
-        - diagnostic
-        - style
         - performance
-    gosec:
-      excludes:
-        - G104  # unhandled errors (covered by errcheck)
-    nakedret:
-      max-func-lines: 20
-    nestif:
-      min-complexity: 5
-    prealloc:
-      simple: true
-      for-loops: true
+        - style
+        - experimental
+    gocyclo:
+      min-complexity: 20
+    govet:
+      enable:
+        - shadow
+    lll:
+      line-length: 140
+    misspell:
+      locale: US
     revive:
       rules:
-        - name: blank-imports
-        - name: context-as-argument
-        - name: context-keys-type
-        - name: dot-imports
-        - name: error-return
-        - name: error-strings
-        - name: error-naming
-        - name: exported
-        - name: increment-decrement
+        - name: early-return
         - name: indent-error-flow
-        - name: range
-        - name: receiver-naming
-        - name: time-naming
-        - name: unexported-return
-        - name: var-declaration
-        - name: var-naming
-    staticcheck:
-      checks:
-        - all
-    unparam:
-      check-exported: false
+        - name: superfluous-else
+        - name: unreachable-code
+        - name: empty-block
+        - name: redefines-builtin-id
+    wsl_v5:
+      allow-first-in-block: true
+      allow-whole-block: false
+      branch-max-lines: 2
+  exclusions:
+    generated: lax
+    rules:
+      - linters:
+          - golint
+        text: should have a package comment, unless it's in another file for this package
+      - linters:
+          - gocritic
+        text: "exitAfterDefer:"
+      - linters:
+          - gocritic
+        text: "whyNoLint: include an explanation for nolint directive"
+      - linters:
+          - revive
+        text: should have a package comment
+      - linters:
+          - staticcheck
+        text: at least one file in a package should have a package comment
+      - linters:
+          - gocritic
+        text: "commentedOutCode: may want to remove commented-out code"
+      - linters:
+          - gocritic
+        text: "unnamedResult: consider giving a name to these results"
+      - linters:
+          - revive
+        text: "var-naming: don't use an underscore in package name"
+      - linters:
+          - staticcheck
+        text: should not use underscores in package names
+      - linters:
+          - govet
+        text: struct literal uses unkeyed fields
+      - linters:
+          - revive
+          - unparam
+          - unused
+        path: _test\.go$
+        text: unused-parameter
+      - linters:
+          - dupl
+          - goconst
+          - noctx
+          - usestdlibvars
+        path: _test\.go$
+      - linters:
+          - dupl
+        path: sdk/registry\.go$
+      - linters:
+          - dupl
+        path: sdk/provider_registry\.go$
+      - linters:
+          - dupl
+        path: sdk/tool_registry\.go$
+      - linters:
+          - gosec
+        text: "G204:"
+      - linters:
+          - gosec
+        text: "G302:"
+      - linters:
+          - gosec
+        text: "G304:"
+      - linters:
+          - gosec
+        path: _test\.go$
+        text: "G301:"
+      - linters:
+          - gosec
+        path: _test\.go$
+        text: "G306:"
+      - linters:
+          - errcheck
+        text: "Error return value of .*.Close.*is not checked"
+    paths:
+      - vendor
+      - third_party$
+      - builtin$
+      - examples$
+formatters:
+  enable:
+    - gofumpt
+    - goimports
+    - swaggo
 
-issues:
-  max-issues-per-linter: 50
-  max-same-issues: 5
+  exclusions:
+    generated: lax
+    paths:
+      - third_party$
+      - builtin$
+      - examples$
+
+  settings:
+    goimports:
+      local-prefixes: weave
+
+    gofumpt:
+      module-path: weave
+      extra-rules: true
