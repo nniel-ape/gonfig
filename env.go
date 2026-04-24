@@ -15,6 +15,7 @@ func applyEnv(target any, fields []fieldInfo, prefix string) error {
 
 	for i := range fields {
 		fi := &fields[i]
+
 		envName := fi.EnvName
 		if prefix != "" {
 			envName = prefix + "_" + fi.EnvName

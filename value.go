@@ -19,7 +19,9 @@ func setFieldValue(field reflect.Value, raw string) error {
 		if err != nil {
 			return fmt.Errorf("cannot parse %q as time.Duration: %w", raw, err)
 		}
+
 		field.Set(reflect.ValueOf(d))
+
 		return nil
 	}
 
@@ -32,6 +34,7 @@ func setFieldValue(field reflect.Value, raw string) error {
 		if err != nil {
 			return fmt.Errorf("cannot parse %q as %s: %w", raw, typ.Kind(), err)
 		}
+
 		field.SetInt(v)
 
 	case reflect.Float64:
@@ -39,6 +42,7 @@ func setFieldValue(field reflect.Value, raw string) error {
 		if err != nil {
 			return fmt.Errorf("cannot parse %q as float64: %w", raw, err)
 		}
+
 		field.SetFloat(v)
 
 	case reflect.Bool:
@@ -46,6 +50,7 @@ func setFieldValue(field reflect.Value, raw string) error {
 		if err != nil {
 			return fmt.Errorf("cannot parse %q as bool: %w", raw, err)
 		}
+
 		field.SetBool(v)
 
 	case reflect.Slice:
@@ -77,6 +82,7 @@ func setSliceValue(field reflect.Value, raw string, typ reflect.Type) error {
 	}
 
 	field.Set(slice)
+
 	return nil
 }
 
@@ -86,5 +92,6 @@ func fieldByIndex(v reflect.Value, index []int) reflect.Value {
 	for _, i := range index {
 		v = v.Field(i)
 	}
+
 	return v
 }

@@ -19,7 +19,9 @@ import (
 // The file format is detected from the extension (.json, .yaml/.yml, .toml).
 func loadFile(target any, path string, fields []fieldInfo) error {
 	ext := strings.ToLower(filepath.Ext(path))
+
 	var format string
+
 	switch ext {
 	case ".json":
 		format = "json"
@@ -35,6 +37,7 @@ func loadFile(target any, path string, fields []fieldInfo) error {
 	if err != nil {
 		return fmt.Errorf("open config file: %w", err)
 	}
+
 	defer func() { _ = f.Close() }()
 
 	data, err := decodeByFormat(f, format)
@@ -63,8 +66,9 @@ func decodeByFormat(r io.Reader, format string) (map[string]any, error) {
 func decodeJSON(r io.Reader) (map[string]any, error) {
 	var data map[string]any
 	if err := json.NewDecoder(r).Decode(&data); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("decoding JSON: %w", err)
 	}
+
 	return data, nil
 }
 
@@ -72,8 +76,9 @@ func decodeJSON(r io.Reader) (map[string]any, error) {
 func decodeYAML(r io.Reader) (map[string]any, error) {
 	var data map[string]any
 	if err := yaml.NewDecoder(r).Decode(&data); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("decoding YAML: %w", err)
 	}
+
 	return data, nil
 }
 
@@ -81,8 +86,9 @@ func decodeYAML(r io.Reader) (map[string]any, error) {
 func decodeTOML(r io.Reader) (map[string]any, error) {
 	var data map[string]any
 	if _, err := toml.NewDecoder(r).Decode(&data); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("decoding TOML: %w", err)
 	}
+
 	return data, nil
 }
 
@@ -93,6 +99,7 @@ func applyMap(target any, data map[string]any, fields []fieldInfo) error {
 
 	for i := range fields {
 		fi := &fields[i]
+
 		val, ok := lookupMap(data, fi.ConfigKey)
 		if !ok {
 			continue
@@ -122,6 +129,7 @@ func lookupMap(data map[string]any, key string) (any, bool) {
 		if !ok {
 			return nil, false
 		}
+
 		current, ok = m[part]
 		if !ok {
 			return nil, false
@@ -143,11 +151,14 @@ func setFieldFromAny(field reflect.Value, val any) error {
 		if !ok {
 			return fmt.Errorf("expected string for time.Duration, got %T", val)
 		}
+
 		d, err := time.ParseDuration(s)
 		if err != nil {
 			return fmt.Errorf("cannot parse %q as time.Duration: %w", s, err)
 		}
+
 		field.Set(reflect.ValueOf(d))
+
 		return nil
 	}
 
@@ -157,6 +168,7 @@ func setFieldFromAny(field reflect.Value, val any) error {
 		if !ok {
 			return fmt.Errorf("expected string, got %T", val)
 		}
+
 		field.SetString(s)
 
 	case reflect.Int, reflect.Int64:
@@ -170,6 +182,7 @@ func setFieldFromAny(field reflect.Value, val any) error {
 		if !ok {
 			return fmt.Errorf("expected bool, got %T", val)
 		}
+
 		field.SetBool(b)
 
 	case reflect.Slice:
@@ -191,10 +204,13 @@ func setIntFromAny(field reflect.Value, val any, typ reflect.Type) error {
 	if err != nil {
 		return fmt.Errorf("expected number for %s, got %T", typ.Kind(), val)
 	}
+
 	if typ.Kind() == reflect.Int && (n > int64(math.MaxInt) || n < int64(math.MinInt)) {
 		return fmt.Errorf("cannot convert %v to int: value out of range", val)
 	}
+
 	field.SetInt(n)
+
 	return nil
 }
 
@@ -205,12 +221,15 @@ func anyToInt64(val any) (int64, error) {
 		if math.IsNaN(v) || math.IsInf(v, 0) {
 			return 0, fmt.Errorf("cannot convert %v to integer: value is not finite", v)
 		}
+
 		if v != math.Trunc(v) {
 			return 0, fmt.Errorf("cannot convert %v to integer: value is not integral", v)
 		}
+
 		if v >= 1<<63 || v < -(1<<63) {
 			return 0, fmt.Errorf("cannot convert %v to integer: value out of range", v)
 		}
+
 		return int64(v), nil
 	case int:
 		return int64(v), nil
@@ -233,6 +252,7 @@ func setFloatFromAny(field reflect.Value, val any) error {
 	default:
 		return fmt.Errorf("expected number for float64, got %T", val)
 	}
+
 	return nil
 }
 
@@ -254,6 +274,7 @@ func setSliceFromAny(field reflect.Value, val any, typ reflect.Type) error {
 	}
 
 	field.Set(slice)
+
 	return nil
 }
 
@@ -278,8 +299,10 @@ func setMapFromAny(field reflect.Value, val any, typ reflect.Type) error {
 			if !ok {
 				return fmt.Errorf("expected string for map value %q, got %T", k, v)
 			}
+
 			result[k] = s
 		}
+
 		field.Set(reflect.ValueOf(result))
 
 	case typ.Elem() == reflect.TypeFor[any]():

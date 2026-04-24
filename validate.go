@@ -3,6 +3,7 @@ package gonfig
 import (
 	"fmt"
 	"reflect"
+	"slices"
 	"strconv"
 	"strings"
 )
@@ -33,7 +34,8 @@ func (e *ValidationError) Error() string {
 	for i, fe := range e.Errors {
 		msgs[i] = fe.Error()
 	}
-	return fmt.Sprintf("validation failed: %s", strings.Join(msgs, "; "))
+
+	return "validation failed: " + strings.Join(msgs, "; ")
 }
 
 // Unwrap returns ErrValidation, enabling errors.Is(err, ErrValidation) checks.
@@ -45,6 +47,7 @@ func (e *ValidationError) Unwrap() error {
 // containing all failures. It does not fail on the first error.
 func validate(target any, fields []fieldInfo) error {
 	rv := reflect.ValueOf(target).Elem()
+
 	var errs []FieldError
 
 	for i := range fields {
@@ -71,6 +74,7 @@ func validate(target any, fields []fieldInfo) error {
 	if len(errs) > 0 {
 		return &ValidationError{Errors: errs}
 	}
+
 	return nil
 }
 
@@ -90,7 +94,7 @@ func checkRule(fi *fieldInfo, fv reflect.Value, rule string) (FieldError, bool) 
 		return FieldError{
 			Field:   fi.Path,
 			Rule:    rule,
-			Message: fmt.Sprintf("unknown validation rule: %s", rule),
+			Message: "unknown validation rule: " + rule,
 		}, false
 	}
 }
@@ -104,49 +108,35 @@ func checkRequired(fi *fieldInfo, fv reflect.Value) (FieldError, bool) {
 			Message: "required field is empty",
 		}, false
 	}
+
 	return FieldError{}, true
 }
 
 // checkMin verifies numeric fields are >= the minimum value.
 func checkMin(fi *fieldInfo, fv reflect.Value, rule string) (FieldError, bool) {
-	boundStr := strings.TrimPrefix(rule, "min=")
-	bound, err := strconv.ParseFloat(boundStr, 64)
-	if err != nil {
-		return FieldError{
-			Field:   fi.Path,
-			Rule:    rule,
-			Message: fmt.Sprintf("invalid min value: %s", boundStr),
-		}, false
-	}
-
-	val, ok := numericValue(fv)
-	if !ok {
-		return FieldError{
-			Field:   fi.Path,
-			Rule:    rule,
-			Message: fmt.Sprintf("min rule requires a numeric type, got %s", fi.Type.Kind()),
-		}, false
-	}
-
-	if val < bound {
-		return FieldError{
-			Field:   fi.Path,
-			Rule:    rule,
-			Message: fmt.Sprintf("value %v is less than minimum %s", val, boundStr),
-		}, false
-	}
-	return FieldError{}, true
+	return checkBound(fi, fv, rule, "min=",
+		func(val, bound float64) bool { return val < bound },
+		"invalid min value: ", "min", "is less than minimum",
+	)
 }
 
 // checkMax verifies numeric fields are <= the maximum value.
 func checkMax(fi *fieldInfo, fv reflect.Value, rule string) (FieldError, bool) {
-	boundStr := strings.TrimPrefix(rule, "max=")
+	return checkBound(fi, fv, rule, "max=",
+		func(val, bound float64) bool { return val > bound },
+		"invalid max value: ", "max", "is greater than maximum",
+	)
+}
+
+func checkBound(fi *fieldInfo, fv reflect.Value, rule, prefix string, violated func(float64, float64) bool, invalidMsg, ruleName, cmpMsg string) (FieldError, bool) {
+	boundStr := strings.TrimPrefix(rule, prefix)
+
 	bound, err := strconv.ParseFloat(boundStr, 64)
 	if err != nil {
 		return FieldError{
 			Field:   fi.Path,
 			Rule:    rule,
-			Message: fmt.Sprintf("invalid max value: %s", boundStr),
+			Message: invalidMsg + boundStr,
 		}, false
 	}
 
@@ -155,17 +145,18 @@ func checkMax(fi *fieldInfo, fv reflect.Value, rule string) (FieldError, bool) {
 		return FieldError{
 			Field:   fi.Path,
 			Rule:    rule,
-			Message: fmt.Sprintf("max rule requires a numeric type, got %s", fi.Type.Kind()),
+			Message: fmt.Sprintf("%s rule requires a numeric type, got %s", ruleName, fi.Type.Kind()),
 		}, false
 	}
 
-	if val > bound {
+	if violated(val, bound) {
 		return FieldError{
 			Field:   fi.Path,
 			Rule:    rule,
-			Message: fmt.Sprintf("value %v is greater than maximum %s", val, boundStr),
+			Message: fmt.Sprintf("value %v %s %s", val, cmpMsg, boundStr),
 		}, false
 	}
+
 	return FieldError{}, true
 }
 
@@ -175,10 +166,8 @@ func checkOneof(fi *fieldInfo, fv reflect.Value, rule string) (FieldError, bool)
 	allowed := strings.Split(allowedStr, " ")
 
 	val := fmt.Sprintf("%v", fv.Interface())
-	for _, a := range allowed {
-		if val == a {
-			return FieldError{}, true
-		}
+	if slices.Contains(allowed, val) {
+		return FieldError{}, true
 	}
 
 	return FieldError{

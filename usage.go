@@ -33,14 +33,17 @@ func Usage(target any, opts ...Option) string {
 	sections := buildSections(rv.Elem().Type(), fields, o.envPrefix)
 
 	var b strings.Builder
+
 	for i, sec := range sections {
 		if i > 0 {
 			b.WriteString("\n")
 		}
+
 		if sec.name != "" {
 			b.WriteString(sec.name)
 			b.WriteString(":\n")
 		}
+
 		writeSection(&b, sec.entries)
 	}
 
@@ -66,13 +69,15 @@ type usageEntry struct {
 func buildSections(t reflect.Type, fields []fieldInfo, envPrefix string) []section {
 	// Determine which top-level struct fields are nested structs (sections).
 	var sectionOrder []string
+
 	sectionSet := make(map[string]bool)
 
-	for i := 0; i < t.NumField(); i++ {
+	for i := range t.NumField() {
 		sf := t.Field(i)
 		if !sf.IsExported() {
 			continue
 		}
+
 		if sf.Type.Kind() == reflect.Struct && sf.Type.PkgPath() != timePkgPath {
 			sectionOrder = append(sectionOrder, sf.Name)
 			sectionSet[sf.Name] = true
@@ -145,6 +150,7 @@ func friendlyTypeName(t reflect.Type) string {
 		if t.PkgPath() == timePkgPath && t.Name() == "Duration" {
 			return "duration"
 		}
+
 		return "int"
 	case reflect.Float32, reflect.Float64:
 		return "float"
@@ -173,12 +179,15 @@ func writeSection(b *strings.Builder, entries []usageEntry) {
 		if len(e.flag) > maxFlag {
 			maxFlag = len(e.flag)
 		}
+
 		if len(e.env) > maxEnv {
 			maxEnv = len(e.env)
 		}
+
 		if len(e.typeName) > maxType {
 			maxType = len(e.typeName)
 		}
+
 		defStr := formatDefault(e.defaultVal)
 		if len(defStr) > maxDefault {
 			maxDefault = len(defStr)
@@ -187,6 +196,7 @@ func writeSection(b *strings.Builder, entries []usageEntry) {
 
 	for _, e := range entries {
 		defStr := formatDefault(e.defaultVal)
+
 		line := fmt.Sprintf("  %-*s  %-*s  %-*s  %-*s",
 			maxFlag, e.flag,
 			maxEnv, e.env,
@@ -196,6 +206,7 @@ func writeSection(b *strings.Builder, entries []usageEntry) {
 		if e.description != "" {
 			line += "  " + e.description
 		}
+
 		b.WriteString(strings.TrimRight(line, " "))
 		b.WriteString("\n")
 	}
@@ -204,15 +215,18 @@ func writeSection(b *strings.Builder, entries []usageEntry) {
 // alignShortFlags pads flag entries so "--" columns align when some entries have short flags.
 func alignShortFlags(entries []usageEntry) {
 	hasShort := false
+
 	for _, e := range entries {
 		if strings.HasPrefix(e.flag, "-") && strings.Contains(e.flag, ", --") {
 			hasShort = true
 			break
 		}
 	}
+
 	if !hasShort {
 		return
 	}
+
 	for i, e := range entries {
 		if !strings.HasPrefix(e.flag, "-") || !strings.Contains(e.flag, ", --") {
 			entries[i].flag = "    " + e.flag
@@ -225,5 +239,6 @@ func formatDefault(val string) string {
 	if val == "" {
 		return ""
 	}
+
 	return "(default: " + val + ")"
 }

@@ -28,9 +28,10 @@ type fieldInfo struct {
 // extractFields recursively walks a struct value and returns field metadata.
 func extractFields(v reflect.Value, prefix string, indexPrefix []int) []fieldInfo {
 	t := v.Type()
+
 	var fields []fieldInfo
 
-	for i := 0; i < t.NumField(); i++ {
+	for i := range t.NumField() {
 		sf := t.Field(i)
 		if !sf.IsExported() {
 			continue
@@ -54,7 +55,9 @@ func extractFields(v reflect.Value, prefix string, indexPrefix []int) []fieldInf
 					path = prefix + "." + keyTag
 				}
 			}
+
 			fields = append(fields, extractFields(v.Field(i), path, idx)...)
+
 			continue
 		}
 
@@ -77,6 +80,7 @@ func buildLeafField(sf *reflect.StructField, path string, idx []int) fieldInfo {
 		fi.DefaultVal = val
 		fi.HasDefault = true
 	}
+
 	fi.Description = sf.Tag.Get("description")
 	fi.ValidateRules = sf.Tag.Get("validate")
 	fi.ShortFlag = sf.Tag.Get("short")
@@ -86,11 +90,13 @@ func buildLeafField(sf *reflect.StructField, path string, idx []int) fieldInfo {
 	} else {
 		fi.EnvName = toEnvName(path)
 	}
+
 	if flagTag := sf.Tag.Get("flag"); flagTag != "" {
 		fi.FlagName = flagTag
 	} else {
 		fi.FlagName = toFlagName(path)
 	}
+
 	if keyTag := sf.Tag.Get("gonfig"); keyTag != "" {
 		fi.ConfigKey = keyTag
 	} else {
@@ -103,30 +109,36 @@ func buildLeafField(sf *reflect.StructField, path string, idx []int) fieldInfo {
 // toEnvName converts a field path like "DB.Host" or "LogLevel" to "DB_HOST" or "LOG_LEVEL".
 func toEnvName(path string) string {
 	parts := strings.Split(path, ".")
+
 	envParts := make([]string, 0, len(parts))
 	for _, p := range parts {
 		envParts = append(envParts, camelToSnake(p))
 	}
+
 	return strings.ToUpper(strings.Join(envParts, "_"))
 }
 
 // toFlagName converts a field path like "DB.Host" or "LogLevel" to "db-host" or "log-level".
 func toFlagName(path string) string {
 	parts := strings.Split(path, ".")
+
 	flagParts := make([]string, 0, len(parts))
 	for _, p := range parts {
 		flagParts = append(flagParts, camelToSnake(p))
 	}
+
 	return strings.ToLower(strings.ReplaceAll(strings.Join(flagParts, "-"), "_", "-"))
 }
 
 // toConfigKey converts a field path like "DB.Host" or "LogLevel" to "db.host" or "log_level".
 func toConfigKey(path string) string {
 	parts := strings.Split(path, ".")
+
 	keyParts := make([]string, 0, len(parts))
 	for _, p := range parts {
 		keyParts = append(keyParts, strings.ToLower(camelToSnake(p)))
 	}
+
 	return strings.Join(keyParts, ".")
 }
 
@@ -143,13 +155,16 @@ var knownAcronyms = []string{
 func acronymMatchAt(runes []rune, pos int) int {
 	for _, acr := range knownAcronyms {
 		acrRunes := []rune(acr)
+
 		n := len(acrRunes)
 		if pos+n > len(runes) {
 			continue
 		}
+
 		if string(runes[pos:pos+n]) != acr {
 			continue
 		}
+
 		end := pos + n
 		// End of string: always valid.
 		if end >= len(runes) {
@@ -173,6 +188,7 @@ func acronymMatchAt(runes []rune, pos int) int {
 		}
 		// Otherwise this would split a non-acronym uppercase sequence (e.g., "ID" in "IDEA").
 	}
+
 	return 0
 }
 
@@ -183,12 +199,14 @@ func camelToSnake(s string) string {
 	if s == "" {
 		return s
 	}
+
 	return strings.Join(splitCamelWords([]rune(s)), "_")
 }
 
 // splitCamelWords splits a CamelCase rune sequence into words, recognizing known acronyms.
 func splitCamelWords(runes []rune) []string {
 	var words []string
+
 	i := 0
 
 	for i < len(runes) {
@@ -216,6 +234,7 @@ func collectUpperWord(runes []rune, i int) (result string, next int) {
 		for end < len(runes) && !unicode.IsUpper(runes[end]) {
 			end++
 		}
+
 		return string(runes[i:end]), end
 	}
 
@@ -228,9 +247,11 @@ func collectUpperWord(runes []rune, i int) (result string, next int) {
 		if i+1 < len(runes) && !unicode.IsUpper(runes[i+1]) {
 			break // Next char starts a CamelCase word.
 		}
+
 		if acronymMatchAt(runes, i) > 0 {
 			break // A known acronym starts here.
 		}
+
 		word.WriteRune(runes[i])
 		i++
 	}
@@ -239,6 +260,7 @@ func collectUpperWord(runes []rune, i int) (result string, next int) {
 		word.WriteRune(runes[i])
 		i++
 	}
+
 	return word.String(), i
 }
 
@@ -248,5 +270,6 @@ func collectNonUpperRun(runes []rune, i int) (result string, next int) {
 	for i < len(runes) && !unicode.IsUpper(runes[i]) {
 		i++
 	}
+
 	return string(runes[start:i]), i
 }

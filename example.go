@@ -73,13 +73,16 @@ func buildExampleTree(fields []fieldInfo) *exampleNode {
 				})
 			} else {
 				found := false
+
 				for _, child := range current.children {
 					if child.key == seg {
 						current = child
 						found = true
+
 						break
 					}
 				}
+
 				if !found {
 					branch := &exampleNode{key: seg}
 					current.children = append(current.children, branch)
@@ -102,9 +105,7 @@ func fieldValueForExample(fi *fieldInfo) any {
 
 	v := reflect.New(typ).Elem()
 	if fi.HasDefault {
-		if err := setFieldValue(v, fi.DefaultVal); err != nil {
-			// Fall through to zero value on parse error.
-		}
+		_ = setFieldValue(v, fi.DefaultVal)
 	}
 
 	if typ == reflect.TypeFor[time.Duration]() {
@@ -120,21 +121,26 @@ func buildComment(fi *fieldInfo) string {
 	if fi.Description != "" {
 		parts = append(parts, fi.Description)
 	}
+
 	if fi.ValidateRules != "" {
 		parts = append(parts, "("+fi.ValidateRules+")")
 	}
+
 	return strings.Join(parts, " ")
 }
 
 // renderYAML produces a YAML config skeleton with comments.
 func renderYAML(root *exampleNode) string {
 	var b strings.Builder
+
 	for i, child := range root.children {
 		if i > 0 {
 			b.WriteByte('\n')
 		}
+
 		renderYAMLNode(&b, child, 0)
 	}
+
 	return b.String()
 }
 
@@ -145,23 +151,28 @@ func renderYAMLNode(b *strings.Builder, node *exampleNode, indent int) {
 		if node.comment != "" {
 			fmt.Fprintf(b, "%s# %s\n", prefix, node.comment)
 		}
+
 		fmt.Fprintf(b, "%s%s:\n", prefix, node.key)
+
 		for i, child := range node.children {
 			if i > 0 {
 				b.WriteByte('\n')
 			}
+
 			renderYAMLNode(b, child, indent+1)
 		}
+
 		return
 	}
 
 	if node.comment != "" {
 		fmt.Fprintf(b, "%s# %s\n", prefix, node.comment)
 	}
+
 	fmt.Fprintf(b, "%s%s: %s\n", prefix, node.key, formatYAMLValue(node.value))
 }
 
-func formatYAMLValue(v any) string {
+func formatConfigValue(v any) string {
 	switch val := v.(type) {
 	case string:
 		return strconv.Quote(val)
@@ -174,40 +185,49 @@ func formatYAMLValue(v any) string {
 	case bool:
 		return strconv.FormatBool(val)
 	case []string:
-		return formatSliceYAML(val, strconv.Quote)
+		return formatSlice(val, strconv.Quote)
 	case []int:
-		return formatSliceYAML(val, strconv.Itoa)
+		return formatSlice(val, strconv.Itoa)
 	case []float64:
-		return formatSliceYAML(val, func(f float64) string { return strconv.FormatFloat(f, 'f', -1, 64) })
+		return formatSlice(val, func(f float64) string { return strconv.FormatFloat(f, 'f', -1, 64) })
 	case []bool:
-		return formatSliceYAML(val, strconv.FormatBool)
+		return formatSlice(val, strconv.FormatBool)
 	default:
 		rv := reflect.ValueOf(v)
 		if rv.Kind() == reflect.Map {
 			return "{}"
 		}
+
 		return fmt.Sprintf("%v", v)
 	}
 }
 
-func formatSliceYAML[T any](s []T, fmtElem func(T) string) string {
+func formatSlice[T any](s []T, fmtElem func(T) string) string {
 	if len(s) == 0 {
 		return "[]"
 	}
+
 	items := make([]string, len(s))
 	for i, elem := range s {
 		items[i] = fmtElem(elem)
 	}
+
 	return "[" + strings.Join(items, ", ") + "]"
+}
+
+func formatYAMLValue(v any) string {
+	return formatConfigValue(v)
 }
 
 // renderJSON produces a JSON config skeleton (no comments).
 func renderJSON(root *exampleNode) string {
 	m := exampleTreeToMap(root)
+
 	data, err := json.MarshalIndent(m, "", "  ")
 	if err != nil {
 		return "{}\n"
 	}
+
 	return string(data) + "\n"
 }
 
@@ -220,18 +240,22 @@ func exampleTreeToMap(node *exampleNode) map[string]any {
 			m[child.key] = child.value
 		}
 	}
+
 	return m
 }
 
 // renderTOML produces a TOML config skeleton with comments.
 func renderTOML(root *exampleNode) string {
 	var b strings.Builder
+
 	for i, child := range root.children {
 		if i > 0 {
 			b.WriteByte('\n')
 		}
+
 		renderTOMLNode(&b, child, "")
 	}
+
 	return b.String()
 }
 
@@ -241,7 +265,9 @@ func renderTOMLNode(b *strings.Builder, node *exampleNode, path string) {
 		if node.comment != "" {
 			fmt.Fprintf(b, "# %s\n", node.comment)
 		}
+
 		fmt.Fprintf(b, "%s = %s\n", node.key, formatTOMLValue(node.value))
+
 		return
 	}
 
@@ -250,6 +276,7 @@ func renderTOMLNode(b *strings.Builder, node *exampleNode, path string) {
 	if path != "" {
 		sectionPath = path + "." + node.key
 	}
+
 	fmt.Fprintf(b, "[%s]\n", sectionPath)
 
 	// Emit leaf children first.
@@ -258,6 +285,7 @@ func renderTOMLNode(b *strings.Builder, node *exampleNode, path string) {
 			if child.comment != "" {
 				fmt.Fprintf(b, "# %s\n", child.comment)
 			}
+
 			fmt.Fprintf(b, "%s = %s\n", child.key, formatTOMLValue(child.value))
 		}
 	}
@@ -272,41 +300,5 @@ func renderTOMLNode(b *strings.Builder, node *exampleNode, path string) {
 }
 
 func formatTOMLValue(v any) string {
-	switch val := v.(type) {
-	case string:
-		return strconv.Quote(val)
-	case int:
-		return strconv.Itoa(val)
-	case int64:
-		return strconv.FormatInt(val, 10)
-	case float64:
-		return strconv.FormatFloat(val, 'f', -1, 64)
-	case bool:
-		return strconv.FormatBool(val)
-	case []string:
-		return formatSliceTOML(val, strconv.Quote)
-	case []int:
-		return formatSliceTOML(val, strconv.Itoa)
-	case []float64:
-		return formatSliceTOML(val, func(f float64) string { return strconv.FormatFloat(f, 'f', -1, 64) })
-	case []bool:
-		return formatSliceTOML(val, strconv.FormatBool)
-	default:
-		rv := reflect.ValueOf(v)
-		if rv.Kind() == reflect.Map {
-			return "{}"
-		}
-		return fmt.Sprintf("%v", v)
-	}
-}
-
-func formatSliceTOML[T any](s []T, fmtElem func(T) string) string {
-	if len(s) == 0 {
-		return "[]"
-	}
-	items := make([]string, len(s))
-	for i, elem := range s {
-		items[i] = fmtElem(elem)
-	}
-	return "[" + strings.Join(items, ", ") + "]"
+	return formatConfigValue(v)
 }

@@ -19,11 +19,13 @@ func applyFlags(target any, fields []fieldInfo, args []string, remaining *[]stri
 	// the existing setFieldValue type conversion logic.
 	flagVals := make(map[string]*string, len(fields))
 	shortToLong := make(map[string]string) // short flag name → long flag name
+
 	for i := range fields {
 		fi := &fields[i]
 		if _, exists := flagVals[fi.FlagName]; exists {
 			return fmt.Errorf("duplicate flag name %q for field %s", fi.FlagName, fi.Path)
 		}
+
 		val := ""
 		flagVals[fi.FlagName] = &val
 		defaultVal := fi.DefaultVal
@@ -34,6 +36,7 @@ func applyFlags(target any, fields []fieldInfo, args []string, remaining *[]stri
 			if existingLong, exists := shortToLong[fi.ShortFlag]; exists {
 				return fmt.Errorf("duplicate short flag %q for field %s (already used by %s)", fi.ShortFlag, fi.Path, existingLong)
 			}
+
 			shortToLong[fi.ShortFlag] = fi.FlagName
 			fs.StringVar(&val, fi.ShortFlag, defaultVal, fi.Description)
 		}
@@ -49,12 +52,14 @@ func applyFlags(target any, fields []fieldInfo, args []string, remaining *[]stri
 
 	// Collect which flags were explicitly set on the command line.
 	setFlags := make(map[string]bool)
+
 	fs.Visit(func(f *flag.Flag) {
 		setFlags[f.Name] = true
 	})
 
 	// Apply only explicitly-set flags to the struct.
 	v := reflect.ValueOf(target).Elem()
+
 	for i := range fields {
 		fi := &fields[i]
 		// Check if either the long flag or the short flag was explicitly set.
@@ -63,6 +68,7 @@ func applyFlags(target any, fields []fieldInfo, args []string, remaining *[]stri
 		}
 
 		raw := *flagVals[fi.FlagName]
+
 		field := fieldByIndex(v, fi.Index)
 		if !field.CanSet() {
 			return fmt.Errorf("cannot set field %s", fi.Path)

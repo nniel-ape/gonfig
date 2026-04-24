@@ -196,6 +196,7 @@ func applyFileSources(target any, sources []fileSource, fields []fieldInfo) erro
 			return err
 		}
 	}
+
 	return nil
 }
 
@@ -205,14 +206,18 @@ func applyFileSource(target any, fs *fileSource, fields []fieldInfo) error {
 		if err := loadFileContent(target, fs.data, fs.format, fields); err != nil {
 			return fmt.Errorf("%w: %w", ErrParse, err)
 		}
+
 		return nil
 	}
+
 	if err := loadFile(target, fs.path, fields); err != nil {
 		if isFileNotFound(err) {
 			return fmt.Errorf("%w: %w", ErrFileNotFound, err)
 		}
+
 		return fmt.Errorf("%w: %w", ErrParse, err)
 	}
+
 	return nil
 }
 
@@ -228,8 +233,10 @@ func handleFlags(target any, o *options, fields []fieldInfo, opts []Option) erro
 		if f != JSON && f != YAML && f != TOML {
 			return fmt.Errorf("%w: invalid format %q for --generate-config (use yaml, json, or toml)", ErrParse, genFormat)
 		}
+
 		printFn(Example(target, f, opts...))
 		osExit(0)
+
 		return nil
 	}
 
@@ -237,14 +244,18 @@ func handleFlags(target any, o *options, fields []fieldInfo, opts []Option) erro
 	if err == nil {
 		return nil
 	}
+
 	if errors.Is(err, flag.ErrHelp) {
 		if o.disableAutoHelp {
 			return err
 		}
+
 		printFn(Usage(target, opts...))
 		osExit(0)
+
 		return nil
 	}
+
 	return fmt.Errorf("%w: %w", ErrParse, err)
 }
 
@@ -254,6 +265,7 @@ func loadFileContent(target any, data []byte, format Format, fields []fieldInfo)
 	if err != nil {
 		return fmt.Errorf("decode %s: %w", format, err)
 	}
+
 	return applyMap(target, m, fields)
 }
 
@@ -269,9 +281,11 @@ func extractAndRemoveGenerateConfig(args []string) (string, []string) {
 		if val, ok := strings.CutPrefix(arg, "--generate-config="); ok {
 			return val, append(args[:i:i], args[i+1:]...)
 		}
+
 		if arg == "--generate-config" && i+1 < len(args) {
 			return args[i+1], append(args[:i:i], args[i+2:]...)
 		}
 	}
+
 	return "", args
 }
