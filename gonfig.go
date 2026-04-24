@@ -12,6 +12,7 @@ import (
 	"fmt"
 	"os"
 	"reflect"
+	"strings"
 )
 
 // Sentinel errors returned by Load.
@@ -43,13 +44,14 @@ const (
 type Option func(*options)
 
 type options struct {
-	envPrefix       string
-	fileSources     []fileSource
-	flagArgs        []string
-	hasFlags        bool
-	disableAutoHelp bool
-	skipValidation  bool
-	remainingArgs   *[]string
+	envPrefix          string
+	fileSources        []fileSource
+	flagArgs           []string
+	hasFlags           bool
+	disableAutoHelp    bool
+	disableAutoExample bool
+	skipValidation     bool
+	remainingArgs      *[]string
 }
 
 // osExit and printFn are package-level vars to allow testing of auto-help behavior.
@@ -111,6 +113,15 @@ func WithAutoHelp(enabled bool) Option {
 func WithoutValidation() Option {
 	return func(o *options) {
 		o.skipValidation = true
+	}
+}
+
+// WithAutoExample controls whether Load automatically generates a config
+// example and exits when --generate-config is passed. Default is true
+// (when WithFlags is used). Set to false to handle --generate-config manually.
+func WithAutoExample(enabled bool) Option {
+	return func(o *options) {
+		o.disableAutoExample = !enabled
 	}
 }
 
@@ -205,8 +216,23 @@ func applyFileSource(target any, fs *fileSource, fields []fieldInfo) error {
 	return nil
 }
 
-// handleFlags parses and applies flags, handling auto-help if enabled.
+// handleFlags parses and applies flags, handling auto-help and --generate-config if enabled.
 func handleFlags(target any, o *options, fields []fieldInfo, opts []Option) error {
+	// Always extract and remove --generate-config from args to avoid
+	// "unknown flag" errors in applyFlags.
+	genFormat, cleanedArgs := extractAndRemoveGenerateConfig(o.flagArgs)
+	o.flagArgs = cleanedArgs
+
+	if genFormat != "" && !o.disableAutoExample {
+		f := Format(genFormat)
+		if f != JSON && f != YAML && f != TOML {
+			return fmt.Errorf("%w: invalid format %q for --generate-config (use yaml, json, or toml)", ErrParse, genFormat)
+		}
+		printFn(Example(target, f, opts...))
+		osExit(0)
+		return nil
+	}
+
 	err := applyFlags(target, fields, o.flagArgs, o.remainingArgs)
 	if err == nil {
 		return nil
@@ -234,4 +260,18 @@ func loadFileContent(target any, data []byte, format Format, fields []fieldInfo)
 // isFileNotFound checks if an error is caused by a missing file.
 func isFileNotFound(err error) bool {
 	return errors.Is(err, os.ErrNotExist)
+}
+
+// extractAndRemoveGenerateConfig scans args for --generate-config and removes it.
+// Returns the format value (e.g., "yaml") and the remaining args.
+func extractAndRemoveGenerateConfig(args []string) (string, []string) {
+	for i, arg := range args {
+		if val, ok := strings.CutPrefix(arg, "--generate-config="); ok {
+			return val, append(args[:i:i], args[i+1:]...)
+		}
+		if arg == "--generate-config" && i+1 < len(args) {
+			return args[i+1], append(args[:i:i], args[i+2:]...)
+		}
+	}
+	return "", args
 }

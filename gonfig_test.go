@@ -537,3 +537,121 @@ func TestLoad_ValidationRunsByDefault(t *testing.T) {
 		t.Errorf("Load() error = %v, want ErrValidation", err)
 	}
 }
+
+func TestLoad_AutoGenerateConfig_YAML(t *testing.T) {
+	exitCode, printed := swapAutoHelp(t)
+
+	type Config struct {
+		Host string `default:"localhost" description:"server host"`
+		Port int    `default:"8080"      description:"server port"`
+	}
+
+	var cfg Config
+	err := Load(&cfg, WithFlags([]string{"--generate-config", "yaml"}))
+	if err != nil {
+		t.Fatalf("Load() returned error: %v", err)
+	}
+	if *exitCode != 0 {
+		t.Errorf("exit code = %d, want 0", *exitCode)
+	}
+	if !strings.Contains(*printed, `host: "localhost"`) {
+		t.Errorf("output should contain host default, got: %s", *printed)
+	}
+	if !strings.Contains(*printed, "# server host") {
+		t.Errorf("output should contain comment, got: %s", *printed)
+	}
+}
+
+func TestLoad_AutoGenerateConfig_JSON(t *testing.T) {
+	exitCode, printed := swapAutoHelp(t)
+
+	type Config struct {
+		Host string `default:"localhost"`
+	}
+
+	var cfg Config
+	err := Load(&cfg, WithFlags([]string{"--generate-config", "json"}))
+	if err != nil {
+		t.Fatalf("Load() returned error: %v", err)
+	}
+	if *exitCode != 0 {
+		t.Errorf("exit code = %d, want 0", *exitCode)
+	}
+	if !strings.Contains(*printed, `"host": "localhost"`) {
+		t.Errorf("output should contain host, got: %s", *printed)
+	}
+}
+
+func TestLoad_AutoGenerateConfig_TOML(t *testing.T) {
+	exitCode, printed := swapAutoHelp(t)
+
+	type Config struct {
+		Host string `default:"localhost"`
+	}
+
+	var cfg Config
+	err := Load(&cfg, WithFlags([]string{"--generate-config", "toml"}))
+	if err != nil {
+		t.Fatalf("Load() returned error: %v", err)
+	}
+	if *exitCode != 0 {
+		t.Errorf("exit code = %d, want 0", *exitCode)
+	}
+	if !strings.Contains(*printed, `host = "localhost"`) {
+		t.Errorf("output should contain host, got: %s", *printed)
+	}
+}
+
+func TestLoad_AutoGenerateConfig_EqualsSyntax(t *testing.T) {
+	exitCode, printed := swapAutoHelp(t)
+
+	type Config struct {
+		Host string `default:"localhost"`
+	}
+
+	var cfg Config
+	err := Load(&cfg, WithFlags([]string{"--generate-config=yaml"}))
+	if err != nil {
+		t.Fatalf("Load() returned error: %v", err)
+	}
+	if *exitCode != 0 {
+		t.Errorf("exit code = %d, want 0", *exitCode)
+	}
+	if *printed == "" {
+		t.Error("expected output, got empty string")
+	}
+}
+
+func TestLoad_AutoGenerateConfig_InvalidFormat(t *testing.T) {
+	type Config struct {
+		Host string `default:"localhost"`
+	}
+
+	var cfg Config
+	err := Load(&cfg, WithFlags([]string{"--generate-config", "xml"}))
+	if err == nil {
+		t.Fatal("expected error for invalid format")
+	}
+	if !errors.Is(err, ErrParse) {
+		t.Errorf("error = %v, want ErrParse", err)
+	}
+}
+
+func TestLoad_AutoGenerateConfigDisabled(t *testing.T) {
+	type Config struct {
+		Host string `default:"localhost"`
+	}
+
+	var cfg Config
+	err := Load(&cfg,
+		WithFlags([]string{"--generate-config", "yaml", "--host", "test"}),
+		WithAutoExample(false),
+	)
+	// Should not error: --generate-config is stripped, --host is applied.
+	if err != nil {
+		t.Fatalf("Load() returned error: %v", err)
+	}
+	if cfg.Host != "test" {
+		t.Errorf("Host = %q, want %q", cfg.Host, "test")
+	}
+}

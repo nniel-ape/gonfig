@@ -141,3 +141,57 @@ func ExampleWithFlags() {
 	// example.com
 	// 9090
 }
+
+func ExampleExample_yaml() {
+	type Config struct {
+		DB struct {
+			Host string `default:"localhost" description:"database host" validate:"required"`
+			Port int    `default:"5432"      description:"database port" validate:"min=1,max=65535"`
+		}
+		LogLevel string `default:"info" description:"logging level"`
+	}
+
+	var cfg Config
+	fmt.Print(gonfig.Example(&cfg, gonfig.YAML))
+	// Output:
+	// db:
+	//   # database host (required)
+	//   host: "localhost"
+	//
+	//   # database port (min=1,max=65535)
+	//   port: 5432
+	//
+	// # logging level
+	// log_level: "info"
+}
+
+func ExampleExample_json() {
+	type Config struct {
+		Host string `default:"localhost"`
+		Port int    `default:"8080"`
+	}
+
+	var cfg Config
+	fmt.Print(gonfig.Example(&cfg, gonfig.JSON))
+	// Output:
+	// {
+	//   "host": "localhost",
+	//   "port": 8080
+	// }
+}
+
+func ExampleExample_toml() {
+	type Config struct {
+		Host string `default:"localhost" description:"server host" validate:"required"`
+		Port int    `default:"8080"      description:"server port"`
+	}
+
+	var cfg Config
+	fmt.Print(gonfig.Example(&cfg, gonfig.TOML))
+	// Output:
+	// # server host (required)
+	// host = "localhost"
+	//
+	// # server port
+	// port = 8080
+}
