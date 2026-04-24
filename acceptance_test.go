@@ -34,16 +34,20 @@ func TestAcceptance_AllFormats_Isolation(t *testing.T) {
 	for _, f := range formats {
 		t.Run(f.name, func(t *testing.T) {
 			var c cfg
+
 			err := Load(&c, WithFile(f.file))
 			if err != nil {
 				t.Fatalf("Load(%s) error: %v", f.name, err)
 			}
+
 			if c.DB.Host != "dbhost" {
 				t.Errorf("DB.Host = %q, want %q", c.DB.Host, "dbhost")
 			}
+
 			if c.DB.Port != 5432 {
 				t.Errorf("DB.Port = %d, want %d", c.DB.Port, 5432)
 			}
+
 			if c.LogLevel != "warn" {
 				t.Errorf("LogLevel = %q, want %q", c.LogLevel, "warn")
 			}
@@ -74,10 +78,12 @@ func TestAcceptance_AllFormats_EnvOverridesFile(t *testing.T) {
 			t.Setenv("TEST_DB_HOST", "envhost")
 
 			var c cfg
+
 			err := Load(&c, WithFile(f.file), WithEnvPrefix("TEST"))
 			if err != nil {
 				t.Fatalf("Load error: %v", err)
 			}
+
 			if c.DB.Host != "envhost" {
 				t.Errorf("DB.Host = %q, want %q (env should override %s file)", c.DB.Host, "envhost", f.name)
 			}
@@ -112,6 +118,7 @@ func TestAcceptance_AllFormats_FlagOverridesAll(t *testing.T) {
 			t.Setenv("ACC_LOG_LEVEL", "error")
 
 			var c cfg
+
 			err := Load(&c,
 				WithFile(f.file),
 				WithEnvPrefix("ACC"),
@@ -124,6 +131,7 @@ func TestAcceptance_AllFormats_FlagOverridesAll(t *testing.T) {
 			if c.LogLevel != "trace" {
 				t.Errorf("LogLevel = %q, want %q (flag should override env)", c.LogLevel, "trace")
 			}
+
 			if c.DB.Host != "flaghost" {
 				t.Errorf("DB.Host = %q, want %q (flag should override file)", c.DB.Host, "flaghost")
 			}
@@ -139,6 +147,7 @@ func TestAcceptance_PriorityOrder_AllSourcesSameKey(t *testing.T) {
 	}
 
 	dir := t.TempDir()
+
 	cfgFile := filepath.Join(dir, "config.json")
 	if err := os.WriteFile(cfgFile, []byte(`{"value":"from-file"}`), 0o644); err != nil {
 		t.Fatal(err)
@@ -150,6 +159,7 @@ func TestAcceptance_PriorityOrder_AllSourcesSameKey(t *testing.T) {
 		if err := Load(&c); err != nil {
 			t.Fatal(err)
 		}
+
 		if c.Value != "from-default" {
 			t.Errorf("Value = %q, want %q", c.Value, "from-default")
 		}
@@ -161,6 +171,7 @@ func TestAcceptance_PriorityOrder_AllSourcesSameKey(t *testing.T) {
 		if err := Load(&c, WithFile(cfgFile)); err != nil {
 			t.Fatal(err)
 		}
+
 		if c.Value != "from-file" {
 			t.Errorf("Value = %q, want %q", c.Value, "from-file")
 		}
@@ -169,10 +180,12 @@ func TestAcceptance_PriorityOrder_AllSourcesSameKey(t *testing.T) {
 	// Test 3: env overrides file
 	t.Run("env_overrides_file", func(t *testing.T) {
 		t.Setenv("PRI_VALUE", "from-env")
+
 		var c cfg
 		if err := Load(&c, WithFile(cfgFile), WithEnvPrefix("PRI")); err != nil {
 			t.Fatal(err)
 		}
+
 		if c.Value != "from-env" {
 			t.Errorf("Value = %q, want %q", c.Value, "from-env")
 		}
@@ -181,6 +194,7 @@ func TestAcceptance_PriorityOrder_AllSourcesSameKey(t *testing.T) {
 	// Test 4: flag overrides env
 	t.Run("flag_overrides_env", func(t *testing.T) {
 		t.Setenv("PRI2_VALUE", "from-env")
+
 		var c cfg
 		if err := Load(&c,
 			WithFile(cfgFile),
@@ -189,6 +203,7 @@ func TestAcceptance_PriorityOrder_AllSourcesSameKey(t *testing.T) {
 		); err != nil {
 			t.Fatal(err)
 		}
+
 		if c.Value != "from-flag" {
 			t.Errorf("Value = %q, want %q", c.Value, "from-flag")
 		}
@@ -215,6 +230,7 @@ func TestAcceptance_NestedStructs_AllSources(t *testing.T) {
 
 	// JSON file sets server.host and db.host
 	cfgFile := filepath.Join(dir, "config.yaml")
+
 	yamlContent := `
 server:
   host: filehost
@@ -234,6 +250,7 @@ db:
 	t.Setenv("NEST_SERVER_TIMEOUT", "60s")
 
 	var c cfg
+
 	err := Load(&c,
 		WithFile(cfgFile),
 		WithEnvPrefix("NEST"),
@@ -289,23 +306,28 @@ func TestAcceptance_Slices_AllSources(t *testing.T) {
 	} {
 		t.Run("file_"+format.name, func(t *testing.T) {
 			var c cfg
+
 			err := Load(&c, WithFile(format.file))
 			if err != nil {
 				t.Fatalf("Load(%s) error: %v", format.name, err)
 			}
+
 			wantTags := []string{"web", "api", "v2"}
 			if len(c.Tags) != len(wantTags) {
 				t.Fatalf("Tags = %v, want %v", c.Tags, wantTags)
 			}
+
 			for i, tag := range c.Tags {
 				if tag != wantTags[i] {
 					t.Errorf("Tags[%d] = %q, want %q", i, tag, wantTags[i])
 				}
 			}
+
 			wantPorts := []int{8080, 8443, 9090}
 			if len(c.Ports) != len(wantPorts) {
 				t.Fatalf("Ports = %v, want %v", c.Ports, wantPorts)
 			}
+
 			for i, p := range c.Ports {
 				if p != wantPorts[i] {
 					t.Errorf("Ports[%d] = %d, want %d", i, p, wantPorts[i])
@@ -320,14 +342,17 @@ func TestAcceptance_Slices_AllSources(t *testing.T) {
 		t.Setenv("SL_PORTS", "1,2,3")
 
 		var c cfg
+
 		err := Load(&c, WithEnvPrefix("SL"))
 		if err != nil {
 			t.Fatalf("Load error: %v", err)
 		}
+
 		wantTags := []string{"x", "y", "z"}
 		if len(c.Tags) != len(wantTags) {
 			t.Fatalf("Tags = %v, want %v", c.Tags, wantTags)
 		}
+
 		for i, tag := range c.Tags {
 			if tag != wantTags[i] {
 				t.Errorf("Tags[%d] = %q, want %q", i, tag, wantTags[i])
@@ -338,14 +363,17 @@ func TestAcceptance_Slices_AllSources(t *testing.T) {
 	// Test with flags (comma-separated).
 	t.Run("flag_override", func(t *testing.T) {
 		var c cfg
+
 		err := Load(&c, WithFlags([]string{"--tags", "f1,f2", "--ports", "100,200"}))
 		if err != nil {
 			t.Fatalf("Load error: %v", err)
 		}
+
 		wantTags := []string{"f1", "f2"}
 		if len(c.Tags) != len(wantTags) {
 			t.Fatalf("Tags = %v, want %v", c.Tags, wantTags)
 		}
+
 		for i, tag := range c.Tags {
 			if tag != wantTags[i] {
 				t.Errorf("Tags[%d] = %q, want %q", i, tag, wantTags[i])
@@ -370,19 +398,24 @@ func TestAcceptance_Maps_FileSources(t *testing.T) {
 	} {
 		t.Run(format.name, func(t *testing.T) {
 			var c cfg
+
 			err := Load(&c, WithFile(format.file))
 			if err != nil {
 				t.Fatalf("Load(%s) error: %v", format.name, err)
 			}
+
 			if c.Labels["env"] != "production" {
 				t.Errorf("Labels[env] = %q, want %q", c.Labels["env"], "production")
 			}
+
 			if c.Labels["region"] != "us-east-1" {
 				t.Errorf("Labels[region] = %q, want %q", c.Labels["region"], "us-east-1")
 			}
+
 			if c.Labels["team"] != "platform" {
 				t.Errorf("Labels[team] = %q, want %q", c.Labels["team"], "platform")
 			}
+
 			if len(c.Labels) != 3 {
 				t.Errorf("len(Labels) = %d, want 3", len(c.Labels))
 			}
@@ -391,6 +424,7 @@ func TestAcceptance_Maps_FileSources(t *testing.T) {
 			if c.Metadata == nil {
 				t.Fatal("Metadata is nil")
 			}
+
 			if v, ok := c.Metadata["version"]; !ok || v != "1.0" {
 				t.Errorf("Metadata[version] = %v, want %q", v, "1.0")
 			}
@@ -409,7 +443,9 @@ func TestAcceptance_Validation_MultipleErrors(t *testing.T) {
 
 	// All fields invalid: Host is empty, Port is 0 (zero value), LogLevel is invalid.
 	var c cfg
+
 	c.LogLevel = "invalid"
+
 	err := Load(&c)
 	if err == nil {
 		t.Fatal("expected validation error, got nil")
@@ -430,6 +466,7 @@ func TestAcceptance_Validation_MultipleErrors(t *testing.T) {
 	for _, fe := range ve.Errors {
 		fieldsSeen[fe.Field] = true
 	}
+
 	for _, field := range []string{"Host", "Port", "LogLevel"} {
 		if !fieldsSeen[field] {
 			t.Errorf("expected validation error for field %q, not found in %v", field, ve.Errors)
@@ -445,6 +482,7 @@ func TestAcceptance_Validation_PassesWithValidConfig(t *testing.T) {
 	}
 
 	var c cfg
+
 	err := Load(&c)
 	if err != nil {
 		t.Fatalf("Load with valid defaults should pass validation, got: %v", err)
@@ -459,6 +497,7 @@ func TestAcceptance_Validation_ErrorMessage_ListsAllFields(t *testing.T) {
 	}
 
 	var c cfg
+
 	err := Load(&c)
 	if err == nil {
 		t.Fatal("expected error")
@@ -486,6 +525,7 @@ func TestAcceptance_Usage_CompleteOutput(t *testing.T) {
 	}
 
 	var c cfg
+
 	output := Usage(&c, WithEnvPrefix("APP"))
 
 	// Verify flag names are present.
@@ -506,9 +546,11 @@ func TestAcceptance_Usage_CompleteOutput(t *testing.T) {
 	if !strings.Contains(output, "string") {
 		t.Errorf("Usage output should contain type 'string'\nGot:\n%s", output)
 	}
+
 	if !strings.Contains(output, "int") {
 		t.Errorf("Usage output should contain type 'int'\nGot:\n%s", output)
 	}
+
 	if !strings.Contains(output, "bool") {
 		t.Errorf("Usage output should contain type 'bool'\nGot:\n%s", output)
 	}
@@ -555,6 +597,7 @@ func TestAcceptance_RealisticConfig_EndToEnd(t *testing.T) {
 	// Write a YAML config file.
 	dir := t.TempDir()
 	cfgFile := filepath.Join(dir, "app.yaml")
+
 	yamlContent := `
 server:
   host: 127.0.0.1
@@ -579,6 +622,7 @@ tags:
 
 	// Flag overrides server port.
 	var cfg appConfig
+
 	err := Load(&cfg,
 		WithFile(cfgFile),
 		WithEnvPrefix("MYAPP"),
@@ -620,6 +664,7 @@ tags:
 	if usage == "" {
 		t.Error("Usage() returned empty string")
 	}
+
 	if !strings.Contains(usage, "Server:") || !strings.Contains(usage, "DB:") {
 		t.Errorf("Usage should have section headers, got:\n%s", usage)
 	}
@@ -646,13 +691,16 @@ func TestAcceptance_WithFileContent_AllFormats(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			var c cfg
+
 			err := Load(&c, WithFileContent(tt.data, tt.format))
 			if err != nil {
 				t.Fatalf("Load error: %v", err)
 			}
+
 			if c.Name != "content" {
 				t.Errorf("Name = %q, want %q", c.Name, "content")
 			}
+
 			if c.Count != 42 {
 				t.Errorf("Count = %d, want %d", c.Count, 42)
 			}
@@ -667,13 +715,16 @@ func TestAcceptance_EmptyFile_DefaultsApply(t *testing.T) {
 	}
 
 	var c cfg
+
 	err := Load(&c, WithFile("testdata/empty.json"))
 	if err != nil {
 		t.Fatalf("Load error: %v", err)
 	}
+
 	if c.Host != "localhost" {
 		t.Errorf("Host = %q, want %q", c.Host, "localhost")
 	}
+
 	if c.Port != 8080 {
 		t.Errorf("Port = %d, want %d", c.Port, 8080)
 	}
@@ -695,6 +746,7 @@ func TestAcceptance_ErrorTypes_AreCorrect(t *testing.T) {
 	// ErrFileNotFound
 	t.Run("ErrFileNotFound", func(t *testing.T) {
 		var c cfg
+
 		err := Load(&c, WithFile("/no/such/file.yaml"))
 		if !errors.Is(err, ErrFileNotFound) {
 			t.Errorf("expected ErrFileNotFound, got %v", err)
@@ -706,8 +758,11 @@ func TestAcceptance_ErrorTypes_AreCorrect(t *testing.T) {
 		type intCfg struct {
 			Port int `default:"0"`
 		}
+
 		t.Setenv("PORT", "not-a-number")
+
 		var c intCfg
+
 		err := Load(&c)
 		if !errors.Is(err, ErrParse) {
 			t.Errorf("expected ErrParse, got %v", err)
@@ -717,6 +772,7 @@ func TestAcceptance_ErrorTypes_AreCorrect(t *testing.T) {
 	// ErrValidation
 	t.Run("ErrValidation", func(t *testing.T) {
 		var c cfg
+
 		err := Load(&c)
 		if !errors.Is(err, ErrValidation) {
 			t.Errorf("expected ErrValidation, got %v", err)

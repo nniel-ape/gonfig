@@ -16,21 +16,26 @@ func TestUsage_FlatStruct(t *testing.T) {
 	}
 
 	var cfg Config
+
 	output := Usage(&cfg)
 
 	// Verify all fields are present.
 	if !strings.Contains(output, "--host") {
 		t.Error("output should contain --host flag")
 	}
+
 	if !strings.Contains(output, "--port") {
 		t.Error("output should contain --port flag")
 	}
+
 	if !strings.Contains(output, "--debug") {
 		t.Error("output should contain --debug flag")
 	}
+
 	if !strings.Contains(output, "--timeout") {
 		t.Error("output should contain --timeout flag")
 	}
+
 	if !strings.Contains(output, "--rate") {
 		t.Error("output should contain --rate flag")
 	}
@@ -39,6 +44,7 @@ func TestUsage_FlatStruct(t *testing.T) {
 	if !strings.Contains(output, "HOST") {
 		t.Error("output should contain HOST env var")
 	}
+
 	if !strings.Contains(output, "PORT") {
 		t.Error("output should contain PORT env var")
 	}
@@ -47,15 +53,19 @@ func TestUsage_FlatStruct(t *testing.T) {
 	if !strings.Contains(output, "string") {
 		t.Error("output should contain string type")
 	}
+
 	if !strings.Contains(output, "int") {
 		t.Error("output should contain int type")
 	}
+
 	if !strings.Contains(output, "bool") {
 		t.Error("output should contain bool type")
 	}
+
 	if !strings.Contains(output, "duration") {
 		t.Error("output should contain duration type")
 	}
+
 	if !strings.Contains(output, "float") {
 		t.Error("output should contain float type")
 	}
@@ -64,6 +74,7 @@ func TestUsage_FlatStruct(t *testing.T) {
 	if !strings.Contains(output, "(default: localhost)") {
 		t.Error("output should contain default value for host")
 	}
+
 	if !strings.Contains(output, "(default: 8080)") {
 		t.Error("output should contain default value for port")
 	}
@@ -72,6 +83,7 @@ func TestUsage_FlatStruct(t *testing.T) {
 	if !strings.Contains(output, "server host") {
 		t.Error("output should contain description for host")
 	}
+
 	if !strings.Contains(output, "enable debug mode") {
 		t.Error("output should contain description for debug")
 	}
@@ -99,12 +111,14 @@ func TestUsage_NestedStructWithSectionHeaders(t *testing.T) {
 	}
 
 	var cfg Config
+
 	output := Usage(&cfg)
 
 	// Verify section headers.
 	if !strings.Contains(output, "DB:\n") {
 		t.Error("output should contain DB section header")
 	}
+
 	if !strings.Contains(output, "Cache:\n") {
 		t.Error("output should contain Cache section header")
 	}
@@ -117,6 +131,7 @@ func TestUsage_NestedStructWithSectionHeaders(t *testing.T) {
 	if logIdx > dbIdx {
 		t.Error("root fields (log-level) should come before DB section")
 	}
+
 	if dbIdx > cacheIdx {
 		t.Error("DB section should come before Cache section")
 	}
@@ -125,12 +140,15 @@ func TestUsage_NestedStructWithSectionHeaders(t *testing.T) {
 	if !strings.Contains(output, "--db-host") {
 		t.Error("output should contain --db-host flag")
 	}
+
 	if !strings.Contains(output, "--cache-ttl") {
 		t.Error("output should contain --cache-ttl flag")
 	}
+
 	if !strings.Contains(output, "DB_HOST") {
 		t.Error("output should contain DB_HOST env var")
 	}
+
 	if !strings.Contains(output, "CACHE_TTL") {
 		t.Error("output should contain CACHE_TTL env var")
 	}
@@ -144,15 +162,18 @@ func TestUsage_FieldsWithoutDescription(t *testing.T) {
 	}
 
 	var cfg Config
+
 	output := Usage(&cfg)
 
 	// All fields should be listed.
 	if !strings.Contains(output, "--host") {
 		t.Error("output should contain --host")
 	}
+
 	if !strings.Contains(output, "--port") {
 		t.Error("output should contain --port")
 	}
+
 	if !strings.Contains(output, "--verbose") {
 		t.Error("output should contain --verbose")
 	}
@@ -179,15 +200,18 @@ func TestUsage_WithEnvPrefix(t *testing.T) {
 	}
 
 	var cfg Config
+
 	output := Usage(&cfg, WithEnvPrefix("APP"))
 
 	// Env vars should include the prefix.
 	if !strings.Contains(output, "APP_DB_HOST") {
 		t.Error("output should contain APP_DB_HOST with prefix")
 	}
+
 	if !strings.Contains(output, "APP_DB_PORT") {
 		t.Error("output should contain APP_DB_PORT with prefix")
 	}
+
 	if !strings.Contains(output, "APP_LOG_LEVEL") {
 		t.Error("output should contain APP_LOG_LEVEL with prefix")
 	}
@@ -202,6 +226,7 @@ func TestUsage_NilTarget(t *testing.T) {
 
 func TestUsage_NonStructTarget(t *testing.T) {
 	s := "not a struct"
+
 	output := Usage(&s)
 	if output != "" {
 		t.Errorf("Usage(&string) = %q, want empty string", output)
@@ -210,7 +235,9 @@ func TestUsage_NonStructTarget(t *testing.T) {
 
 func TestUsage_EmptyStruct(t *testing.T) {
 	type Config struct{}
+
 	var cfg Config
+
 	output := Usage(&cfg)
 	if output != "" {
 		t.Errorf("Usage(empty struct) = %q, want empty string", output)
@@ -225,14 +252,17 @@ func TestUsage_SliceAndMapTypes(t *testing.T) {
 	}
 
 	var cfg Config
+
 	output := Usage(&cfg)
 
 	if !strings.Contains(output, "[]string") {
 		t.Error("output should contain []string type")
 	}
+
 	if !strings.Contains(output, "[]int") {
 		t.Error("output should contain []int type")
 	}
+
 	if !strings.Contains(output, "map[string]string") {
 		t.Error("output should contain map[string]string type")
 	}
@@ -244,11 +274,13 @@ func TestUsage_ExplicitTagOverrides(t *testing.T) {
 	}
 
 	var cfg Config
+
 	output := Usage(&cfg)
 
 	if !strings.Contains(output, "--custom-host") {
 		t.Error("output should use explicit flag name --custom-host")
 	}
+
 	if !strings.Contains(output, "CUSTOM_HOST") {
 		t.Error("output should use explicit env name CUSTOM_HOST")
 	}
@@ -260,6 +292,7 @@ func TestUsage_ExplicitTagOverrides_WithPrefix(t *testing.T) {
 	}
 
 	var cfg Config
+
 	output := Usage(&cfg, WithEnvPrefix("APP"))
 
 	// Prefix should be prepended even to explicit env names.
@@ -277,6 +310,7 @@ func TestUsage_OnlyNestedStructs(t *testing.T) {
 	}
 
 	var cfg Config
+
 	output := Usage(&cfg)
 
 	// Should have Server section header but no root section.
@@ -288,6 +322,7 @@ func TestUsage_OnlyNestedStructs(t *testing.T) {
 	if !strings.Contains(output, "--server-host") {
 		t.Error("output should contain --server-host")
 	}
+
 	if !strings.Contains(output, "--server-port") {
 		t.Error("output should contain --server-port")
 	}
@@ -300,6 +335,7 @@ func TestUsage_NoDefaultValue(t *testing.T) {
 	}
 
 	var cfg Config
+
 	output := Usage(&cfg)
 
 	// Host line should not have "(default: ...)" text.
@@ -324,12 +360,14 @@ func TestUsage_ShortFlags(t *testing.T) {
 	}
 
 	var cfg Config
+
 	output := Usage(&cfg)
 
 	// Short flags should display as "-p, --port".
 	if !strings.Contains(output, "-p, --port") {
 		t.Errorf("output should contain '-p, --port', got:\n%s", output)
 	}
+
 	if !strings.Contains(output, "-d, --debug") {
 		t.Errorf("output should contain '-d, --debug', got:\n%s", output)
 	}
@@ -347,6 +385,7 @@ func TestUsage_ColumnAlignment(t *testing.T) {
 	}
 
 	var cfg Config
+
 	output := Usage(&cfg)
 
 	lines := strings.Split(strings.TrimRight(output, "\n"), "\n")
@@ -357,6 +396,7 @@ func TestUsage_ColumnAlignment(t *testing.T) {
 	// Both lines should have the same column positions for env vars and types.
 	// The shorter flag should be padded to match the longer one.
 	envIdx0 := strings.Index(lines[0], "H ")
+
 	envIdx1 := strings.Index(lines[1], "LONG_FIELD_NAME")
 	if envIdx0 != envIdx1 {
 		t.Errorf("env columns are not aligned: line0=%d, line1=%d\nline0: %q\nline1: %q",
@@ -364,6 +404,7 @@ func TestUsage_ColumnAlignment(t *testing.T) {
 	}
 
 	typeIdx0 := strings.Index(lines[0], "string")
+
 	typeIdx1 := strings.Index(lines[1], "string")
 	if typeIdx0 != typeIdx1 {
 		t.Errorf("type columns are not aligned: line0=%d, line1=%d\nline0: %q\nline1: %q",

@@ -10,16 +10,20 @@ import (
 
 func TestDecodeJSON(t *testing.T) {
 	input := `{"host": "localhost", "port": 8080, "debug": true}`
+
 	data, err := decodeJSON(strings.NewReader(input))
 	if err != nil {
 		t.Fatalf("decodeJSON: unexpected error: %v", err)
 	}
+
 	if data["host"] != "localhost" {
 		t.Errorf("host = %v, want localhost", data["host"])
 	}
+
 	if data["port"] != float64(8080) {
 		t.Errorf("port = %v, want 8080", data["port"])
 	}
+
 	if data["debug"] != true {
 		t.Errorf("debug = %v, want true", data["debug"])
 	}
@@ -60,6 +64,7 @@ func TestLookupMap(t *testing.T) {
 			if ok != tt.wantOK {
 				t.Errorf("lookupMap(%q) ok = %v, want %v", tt.key, ok, tt.wantOK)
 			}
+
 			if ok && got != tt.want {
 				t.Errorf("lookupMap(%q) = %v, want %v", tt.key, got, tt.want)
 			}
@@ -101,16 +106,20 @@ func TestSetFieldFromAny(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			field := reflect.New(tt.typ).Elem()
+
 			err := setFieldFromAny(field, tt.val)
 			if tt.wantErr {
 				if err == nil {
 					t.Fatal("expected error")
 				}
+
 				return
 			}
+
 			if err != nil {
 				t.Fatalf("unexpected error: %v", err)
 			}
+
 			got := field.Interface()
 			if got != tt.want {
 				t.Errorf("got %v (%T), want %v (%T)", got, got, tt.want, tt.want)
@@ -122,11 +131,14 @@ func TestSetFieldFromAny(t *testing.T) {
 func TestSetSliceFromAny(t *testing.T) {
 	t.Run("string slice", func(t *testing.T) {
 		field := reflect.New(reflect.TypeFor[[]string]()).Elem()
+
 		err := setSliceFromAny(field, []any{"a", "b", "c"}, field.Type())
 		if err != nil {
 			t.Fatalf("unexpected error: %v", err)
 		}
+
 		got := field.Interface().([]string)
+
 		want := []string{"a", "b", "c"}
 		if !reflect.DeepEqual(got, want) {
 			t.Errorf("got %v, want %v", got, want)
@@ -135,11 +147,14 @@ func TestSetSliceFromAny(t *testing.T) {
 
 	t.Run("int slice", func(t *testing.T) {
 		field := reflect.New(reflect.TypeFor[[]int]()).Elem()
+
 		err := setSliceFromAny(field, []any{float64(1), float64(2), float64(3)}, field.Type())
 		if err != nil {
 			t.Fatalf("unexpected error: %v", err)
 		}
+
 		got := field.Interface().([]int)
+
 		want := []int{1, 2, 3}
 		if !reflect.DeepEqual(got, want) {
 			t.Errorf("got %v, want %v", got, want)
@@ -148,6 +163,7 @@ func TestSetSliceFromAny(t *testing.T) {
 
 	t.Run("not an array", func(t *testing.T) {
 		field := reflect.New(reflect.TypeFor[[]string]()).Elem()
+
 		err := setSliceFromAny(field, "not an array", field.Type())
 		if err == nil {
 			t.Fatal("expected error")
@@ -165,6 +181,7 @@ func TestApplyMap_Flat(t *testing.T) {
 	}
 
 	var cfg Config
+
 	fields := extractFields(reflect.ValueOf(&cfg).Elem(), "", nil)
 
 	data := map[string]any{
@@ -182,15 +199,19 @@ func TestApplyMap_Flat(t *testing.T) {
 	if cfg.Host != "localhost" {
 		t.Errorf("Host = %q, want %q", cfg.Host, "localhost")
 	}
+
 	if cfg.Port != 8080 {
 		t.Errorf("Port = %d, want %d", cfg.Port, 8080)
 	}
+
 	if cfg.Debug != true {
 		t.Errorf("Debug = %v, want true", cfg.Debug)
 	}
+
 	if cfg.LogLevel != "debug" {
 		t.Errorf("LogLevel = %q, want %q", cfg.LogLevel, "debug")
 	}
+
 	if cfg.Rate != 3.14 {
 		t.Errorf("Rate = %f, want %f", cfg.Rate, 3.14)
 	}
@@ -207,6 +228,7 @@ func TestApplyMap_Nested(t *testing.T) {
 	}
 
 	var cfg Config
+
 	fields := extractFields(reflect.ValueOf(&cfg).Elem(), "", nil)
 
 	data := map[string]any{
@@ -225,9 +247,11 @@ func TestApplyMap_Nested(t *testing.T) {
 	if cfg.DB.Host != "dbhost" {
 		t.Errorf("DB.Host = %q, want %q", cfg.DB.Host, "dbhost")
 	}
+
 	if cfg.DB.Port != 5432 {
 		t.Errorf("DB.Port = %d, want %d", cfg.DB.Port, 5432)
 	}
+
 	if cfg.LogLevel != "warn" {
 		t.Errorf("LogLevel = %q, want %q", cfg.LogLevel, "warn")
 	}
@@ -250,6 +274,7 @@ func TestApplyMap_EmptyMap(t *testing.T) {
 	if cfg.Host != "original" {
 		t.Errorf("Host = %q, want %q", cfg.Host, "original")
 	}
+
 	if cfg.Port != 1234 {
 		t.Errorf("Port = %d, want %d", cfg.Port, 1234)
 	}
@@ -265,6 +290,7 @@ func TestLoadFile_JSON_Flat(t *testing.T) {
 	}
 
 	var cfg Config
+
 	fields := extractFields(reflect.ValueOf(&cfg).Elem(), "", nil)
 
 	if err := loadFile(&cfg, "testdata/valid.json", fields); err != nil {
@@ -274,15 +300,19 @@ func TestLoadFile_JSON_Flat(t *testing.T) {
 	if cfg.Host != "localhost" {
 		t.Errorf("Host = %q, want %q", cfg.Host, "localhost")
 	}
+
 	if cfg.Port != 8080 {
 		t.Errorf("Port = %d, want %d", cfg.Port, 8080)
 	}
+
 	if cfg.Debug != true {
 		t.Errorf("Debug = %v, want true", cfg.Debug)
 	}
+
 	if cfg.LogLevel != "debug" {
 		t.Errorf("LogLevel = %q, want %q", cfg.LogLevel, "debug")
 	}
+
 	if cfg.Rate != 3.14 {
 		t.Errorf("Rate = %f, want %f", cfg.Rate, 3.14)
 	}
@@ -299,6 +329,7 @@ func TestLoadFile_JSON_Nested(t *testing.T) {
 	}
 
 	var cfg Config
+
 	fields := extractFields(reflect.ValueOf(&cfg).Elem(), "", nil)
 
 	if err := loadFile(&cfg, "testdata/nested.json", fields); err != nil {
@@ -308,12 +339,15 @@ func TestLoadFile_JSON_Nested(t *testing.T) {
 	if cfg.DB.Host != "dbhost" {
 		t.Errorf("DB.Host = %q, want %q", cfg.DB.Host, "dbhost")
 	}
+
 	if cfg.DB.Port != 5432 {
 		t.Errorf("DB.Port = %d, want %d", cfg.DB.Port, 5432)
 	}
+
 	if cfg.LogLevel != "warn" {
 		t.Errorf("LogLevel = %q, want %q", cfg.LogLevel, "warn")
 	}
+
 	if cfg.Debug != false {
 		t.Errorf("Debug = %v, want false", cfg.Debug)
 	}
@@ -342,12 +376,14 @@ func TestLoadFile_FileNotFound(t *testing.T) {
 	}
 
 	var cfg Config
+
 	fields := extractFields(reflect.ValueOf(&cfg).Elem(), "", nil)
 
 	err := loadFile(&cfg, "testdata/nonexistent.json", fields)
 	if err == nil {
 		t.Fatal("loadFile: expected error for missing file")
 	}
+
 	if !strings.Contains(err.Error(), "open config file") {
 		t.Errorf("error = %q, want it to mention 'open config file'", err.Error())
 	}
@@ -359,12 +395,14 @@ func TestLoadFile_InvalidJSON(t *testing.T) {
 	}
 
 	var cfg Config
+
 	fields := extractFields(reflect.ValueOf(&cfg).Elem(), "", nil)
 
 	err := loadFile(&cfg, "testdata/invalid.json", fields)
 	if err == nil {
 		t.Fatal("loadFile: expected error for invalid JSON")
 	}
+
 	if !strings.Contains(err.Error(), "decode") {
 		t.Errorf("error = %q, want it to mention 'decode'", err.Error())
 	}
@@ -372,10 +410,12 @@ func TestLoadFile_InvalidJSON(t *testing.T) {
 
 func TestDecodeYAML(t *testing.T) {
 	input := "host: localhost\nport: 8080\ndebug: true\n"
+
 	data, err := decodeYAML(strings.NewReader(input))
 	if err != nil {
 		t.Fatalf("decodeYAML: unexpected error: %v", err)
 	}
+
 	if data["host"] != "localhost" {
 		t.Errorf("host = %v, want localhost", data["host"])
 	}
@@ -383,6 +423,7 @@ func TestDecodeYAML(t *testing.T) {
 	if data["port"] != 8080 {
 		t.Errorf("port = %v (%T), want 8080", data["port"], data["port"])
 	}
+
 	if data["debug"] != true {
 		t.Errorf("debug = %v, want true", data["debug"])
 	}
@@ -405,6 +446,7 @@ func TestLoadFile_YAML_Flat(t *testing.T) {
 	}
 
 	var cfg Config
+
 	fields := extractFields(reflect.ValueOf(&cfg).Elem(), "", nil)
 
 	if err := loadFile(&cfg, "testdata/valid.yaml", fields); err != nil {
@@ -414,15 +456,19 @@ func TestLoadFile_YAML_Flat(t *testing.T) {
 	if cfg.Host != "localhost" {
 		t.Errorf("Host = %q, want %q", cfg.Host, "localhost")
 	}
+
 	if cfg.Port != 8080 {
 		t.Errorf("Port = %d, want %d", cfg.Port, 8080)
 	}
+
 	if cfg.Debug != true {
 		t.Errorf("Debug = %v, want true", cfg.Debug)
 	}
+
 	if cfg.LogLevel != "debug" {
 		t.Errorf("LogLevel = %q, want %q", cfg.LogLevel, "debug")
 	}
+
 	if cfg.Rate != 3.14 {
 		t.Errorf("Rate = %f, want %f", cfg.Rate, 3.14)
 	}
@@ -439,6 +485,7 @@ func TestLoadFile_YAML_Nested(t *testing.T) {
 	}
 
 	var cfg Config
+
 	fields := extractFields(reflect.ValueOf(&cfg).Elem(), "", nil)
 
 	if err := loadFile(&cfg, "testdata/nested.yaml", fields); err != nil {
@@ -448,12 +495,15 @@ func TestLoadFile_YAML_Nested(t *testing.T) {
 	if cfg.DB.Host != "dbhost" {
 		t.Errorf("DB.Host = %q, want %q", cfg.DB.Host, "dbhost")
 	}
+
 	if cfg.DB.Port != 5432 {
 		t.Errorf("DB.Port = %d, want %d", cfg.DB.Port, 5432)
 	}
+
 	if cfg.LogLevel != "warn" {
 		t.Errorf("LogLevel = %q, want %q", cfg.LogLevel, "warn")
 	}
+
 	if cfg.Debug != false {
 		t.Errorf("Debug = %v, want false", cfg.Debug)
 	}
@@ -465,12 +515,14 @@ func TestLoadFile_YAML_Invalid(t *testing.T) {
 	}
 
 	var cfg Config
+
 	fields := extractFields(reflect.ValueOf(&cfg).Elem(), "", nil)
 
 	err := loadFile(&cfg, "testdata/invalid.yaml", fields)
 	if err == nil {
 		t.Fatal("loadFile: expected error for invalid YAML")
 	}
+
 	if !strings.Contains(err.Error(), "decode") {
 		t.Errorf("error = %q, want it to mention 'decode'", err.Error())
 	}
@@ -478,10 +530,12 @@ func TestLoadFile_YAML_Invalid(t *testing.T) {
 
 func TestDecodeTOML(t *testing.T) {
 	input := "host = \"localhost\"\nport = 8080\ndebug = true\n"
+
 	data, err := decodeTOML(strings.NewReader(input))
 	if err != nil {
 		t.Fatalf("decodeTOML: unexpected error: %v", err)
 	}
+
 	if data["host"] != "localhost" {
 		t.Errorf("host = %v, want localhost", data["host"])
 	}
@@ -489,6 +543,7 @@ func TestDecodeTOML(t *testing.T) {
 	if data["port"] != int64(8080) {
 		t.Errorf("port = %v (%T), want 8080", data["port"], data["port"])
 	}
+
 	if data["debug"] != true {
 		t.Errorf("debug = %v, want true", data["debug"])
 	}
@@ -511,6 +566,7 @@ func TestLoadFile_TOML_Flat(t *testing.T) {
 	}
 
 	var cfg Config
+
 	fields := extractFields(reflect.ValueOf(&cfg).Elem(), "", nil)
 
 	if err := loadFile(&cfg, "testdata/valid.toml", fields); err != nil {
@@ -520,15 +576,19 @@ func TestLoadFile_TOML_Flat(t *testing.T) {
 	if cfg.Host != "localhost" {
 		t.Errorf("Host = %q, want %q", cfg.Host, "localhost")
 	}
+
 	if cfg.Port != 8080 {
 		t.Errorf("Port = %d, want %d", cfg.Port, 8080)
 	}
+
 	if cfg.Debug != true {
 		t.Errorf("Debug = %v, want true", cfg.Debug)
 	}
+
 	if cfg.LogLevel != "debug" {
 		t.Errorf("LogLevel = %q, want %q", cfg.LogLevel, "debug")
 	}
+
 	if cfg.Rate != 3.14 {
 		t.Errorf("Rate = %f, want %f", cfg.Rate, 3.14)
 	}
@@ -545,6 +605,7 @@ func TestLoadFile_TOML_Nested(t *testing.T) {
 	}
 
 	var cfg Config
+
 	fields := extractFields(reflect.ValueOf(&cfg).Elem(), "", nil)
 
 	if err := loadFile(&cfg, "testdata/nested.toml", fields); err != nil {
@@ -554,12 +615,15 @@ func TestLoadFile_TOML_Nested(t *testing.T) {
 	if cfg.DB.Host != "dbhost" {
 		t.Errorf("DB.Host = %q, want %q", cfg.DB.Host, "dbhost")
 	}
+
 	if cfg.DB.Port != 5432 {
 		t.Errorf("DB.Port = %d, want %d", cfg.DB.Port, 5432)
 	}
+
 	if cfg.LogLevel != "warn" {
 		t.Errorf("LogLevel = %q, want %q", cfg.LogLevel, "warn")
 	}
+
 	if cfg.Debug != false {
 		t.Errorf("Debug = %v, want false", cfg.Debug)
 	}
@@ -571,12 +635,14 @@ func TestLoadFile_TOML_Invalid(t *testing.T) {
 	}
 
 	var cfg Config
+
 	fields := extractFields(reflect.ValueOf(&cfg).Elem(), "", nil)
 
 	err := loadFile(&cfg, "testdata/invalid.toml", fields)
 	if err == nil {
 		t.Fatal("loadFile: expected error for invalid TOML")
 	}
+
 	if !strings.Contains(err.Error(), "decode") {
 		t.Errorf("error = %q, want it to mention 'decode'", err.Error())
 	}
@@ -592,6 +658,7 @@ func TestApplyMap_SliceFields(t *testing.T) {
 	}
 
 	var cfg Config
+
 	fields := extractFields(reflect.ValueOf(&cfg).Elem(), "", nil)
 
 	data := map[string]any{
@@ -608,10 +675,12 @@ func TestApplyMap_SliceFields(t *testing.T) {
 	if !reflect.DeepEqual(cfg.Tags, wantTags) {
 		t.Errorf("Tags = %v, want %v", cfg.Tags, wantTags)
 	}
+
 	wantPorts := []int{8080, 8443, 9090}
 	if !reflect.DeepEqual(cfg.Ports, wantPorts) {
 		t.Errorf("Ports = %v, want %v", cfg.Ports, wantPorts)
 	}
+
 	wantRates := []float64{1.5, 2.7, 3.14}
 	if !reflect.DeepEqual(cfg.Rates, wantRates) {
 		t.Errorf("Rates = %v, want %v", cfg.Rates, wantRates)
@@ -626,6 +695,7 @@ func TestLoadFile_JSON_Slices(t *testing.T) {
 	}
 
 	var cfg Config
+
 	fields := extractFields(reflect.ValueOf(&cfg).Elem(), "", nil)
 
 	if err := loadFile(&cfg, "testdata/slices.json", fields); err != nil {
@@ -635,9 +705,11 @@ func TestLoadFile_JSON_Slices(t *testing.T) {
 	if !reflect.DeepEqual(cfg.Tags, []string{"web", "api", "v2"}) {
 		t.Errorf("Tags = %v", cfg.Tags)
 	}
+
 	if !reflect.DeepEqual(cfg.Ports, []int{8080, 8443, 9090}) {
 		t.Errorf("Ports = %v", cfg.Ports)
 	}
+
 	if !reflect.DeepEqual(cfg.Rates, []float64{1.5, 2.7, 3.14}) {
 		t.Errorf("Rates = %v", cfg.Rates)
 	}
@@ -651,6 +723,7 @@ func TestLoadFile_YAML_Slices(t *testing.T) {
 	}
 
 	var cfg Config
+
 	fields := extractFields(reflect.ValueOf(&cfg).Elem(), "", nil)
 
 	if err := loadFile(&cfg, "testdata/slices.yaml", fields); err != nil {
@@ -660,9 +733,11 @@ func TestLoadFile_YAML_Slices(t *testing.T) {
 	if !reflect.DeepEqual(cfg.Tags, []string{"web", "api", "v2"}) {
 		t.Errorf("Tags = %v", cfg.Tags)
 	}
+
 	if !reflect.DeepEqual(cfg.Ports, []int{8080, 8443, 9090}) {
 		t.Errorf("Ports = %v", cfg.Ports)
 	}
+
 	if !reflect.DeepEqual(cfg.Rates, []float64{1.5, 2.7, 3.14}) {
 		t.Errorf("Rates = %v", cfg.Rates)
 	}
@@ -676,6 +751,7 @@ func TestLoadFile_TOML_Slices(t *testing.T) {
 	}
 
 	var cfg Config
+
 	fields := extractFields(reflect.ValueOf(&cfg).Elem(), "", nil)
 
 	if err := loadFile(&cfg, "testdata/slices.toml", fields); err != nil {
@@ -685,9 +761,11 @@ func TestLoadFile_TOML_Slices(t *testing.T) {
 	if !reflect.DeepEqual(cfg.Tags, []string{"web", "api", "v2"}) {
 		t.Errorf("Tags = %v", cfg.Tags)
 	}
+
 	if !reflect.DeepEqual(cfg.Ports, []int{8080, 8443, 9090}) {
 		t.Errorf("Ports = %v", cfg.Ports)
 	}
+
 	if !reflect.DeepEqual(cfg.Rates, []float64{1.5, 2.7, 3.14}) {
 		t.Errorf("Rates = %v", cfg.Rates)
 	}
@@ -701,6 +779,7 @@ func TestApplyMap_MapStringString(t *testing.T) {
 	}
 
 	var cfg Config
+
 	fields := extractFields(reflect.ValueOf(&cfg).Elem(), "", nil)
 
 	data := map[string]any{
@@ -727,6 +806,7 @@ func TestApplyMap_MapStringAny(t *testing.T) {
 	}
 
 	var cfg Config
+
 	fields := extractFields(reflect.ValueOf(&cfg).Elem(), "", nil)
 
 	data := map[string]any{
@@ -744,9 +824,11 @@ func TestApplyMap_MapStringAny(t *testing.T) {
 	if cfg.Metadata["version"] != "1.0" {
 		t.Errorf("Metadata[version] = %v", cfg.Metadata["version"])
 	}
+
 	if cfg.Metadata["count"] != float64(42) {
 		t.Errorf("Metadata[count] = %v", cfg.Metadata["count"])
 	}
+
 	if cfg.Metadata["enabled"] != true {
 		t.Errorf("Metadata[enabled] = %v", cfg.Metadata["enabled"])
 	}
@@ -759,6 +841,7 @@ func TestLoadFile_JSON_Maps(t *testing.T) {
 	}
 
 	var cfg Config
+
 	fields := extractFields(reflect.ValueOf(&cfg).Elem(), "", nil)
 
 	if err := loadFile(&cfg, "testdata/maps.json", fields); err != nil {
@@ -769,6 +852,7 @@ func TestLoadFile_JSON_Maps(t *testing.T) {
 	if !reflect.DeepEqual(cfg.Labels, wantLabels) {
 		t.Errorf("Labels = %v, want %v", cfg.Labels, wantLabels)
 	}
+
 	if cfg.Metadata["version"] != "1.0" {
 		t.Errorf("Metadata[version] = %v", cfg.Metadata["version"])
 	}
@@ -781,6 +865,7 @@ func TestLoadFile_YAML_Maps(t *testing.T) {
 	}
 
 	var cfg Config
+
 	fields := extractFields(reflect.ValueOf(&cfg).Elem(), "", nil)
 
 	if err := loadFile(&cfg, "testdata/maps.yaml", fields); err != nil {
@@ -791,6 +876,7 @@ func TestLoadFile_YAML_Maps(t *testing.T) {
 	if !reflect.DeepEqual(cfg.Labels, wantLabels) {
 		t.Errorf("Labels = %v, want %v", cfg.Labels, wantLabels)
 	}
+
 	if cfg.Metadata["version"] != "1.0" {
 		t.Errorf("Metadata[version] = %v", cfg.Metadata["version"])
 	}
@@ -803,6 +889,7 @@ func TestLoadFile_TOML_Maps(t *testing.T) {
 	}
 
 	var cfg Config
+
 	fields := extractFields(reflect.ValueOf(&cfg).Elem(), "", nil)
 
 	if err := loadFile(&cfg, "testdata/maps.toml", fields); err != nil {
@@ -813,6 +900,7 @@ func TestLoadFile_TOML_Maps(t *testing.T) {
 	if !reflect.DeepEqual(cfg.Labels, wantLabels) {
 		t.Errorf("Labels = %v, want %v", cfg.Labels, wantLabels)
 	}
+
 	if cfg.Metadata["version"] != "1.0" {
 		t.Errorf("Metadata[version] = %v", cfg.Metadata["version"])
 	}
@@ -826,6 +914,7 @@ func TestApplyMap_EmptySlice(t *testing.T) {
 	}
 
 	var cfg Config
+
 	fields := extractFields(reflect.ValueOf(&cfg).Elem(), "", nil)
 
 	data := map[string]any{
@@ -848,6 +937,7 @@ func TestApplyMap_SingleElementSlice(t *testing.T) {
 	}
 
 	var cfg Config
+
 	fields := extractFields(reflect.ValueOf(&cfg).Elem(), "", nil)
 
 	data := map[string]any{
@@ -862,6 +952,7 @@ func TestApplyMap_SingleElementSlice(t *testing.T) {
 	if !reflect.DeepEqual(cfg.Tags, []string{"single"}) {
 		t.Errorf("Tags = %v, want [single]", cfg.Tags)
 	}
+
 	if !reflect.DeepEqual(cfg.Ports, []int{8080}) {
 		t.Errorf("Ports = %v, want [8080]", cfg.Ports)
 	}
@@ -869,6 +960,7 @@ func TestApplyMap_SingleElementSlice(t *testing.T) {
 
 func TestSetSliceFromAny_IntNonIntegralFloat64(t *testing.T) {
 	field := reflect.New(reflect.TypeFor[[]int]()).Elem()
+
 	err := setSliceFromAny(field, []any{float64(1), float64(2.5)}, field.Type())
 	if err == nil {
 		t.Fatal("expected error for non-integral float64 in int slice")
@@ -888,6 +980,7 @@ func TestSetSliceFromAny_IntNonFiniteFloat64(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			field := reflect.New(reflect.TypeFor[[]int]()).Elem()
+
 			err := setSliceFromAny(field, []any{tt.val}, field.Type())
 			if err == nil {
 				t.Fatalf("expected error for %s in int slice", tt.name)
@@ -898,11 +991,14 @@ func TestSetSliceFromAny_IntNonFiniteFloat64(t *testing.T) {
 
 func TestSetSliceFromAny_Float64(t *testing.T) {
 	field := reflect.New(reflect.TypeFor[[]float64]()).Elem()
+
 	err := setSliceFromAny(field, []any{float64(1.5), float64(2.7)}, field.Type())
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
+
 	got := field.Interface().([]float64)
+
 	want := []float64{1.5, 2.7}
 	if !reflect.DeepEqual(got, want) {
 		t.Errorf("got %v, want %v", got, want)
@@ -912,11 +1008,14 @@ func TestSetSliceFromAny_Float64(t *testing.T) {
 func TestSetSliceFromAny_IntFromYAML(t *testing.T) {
 	// YAML decodes integers as int, not float64
 	field := reflect.New(reflect.TypeFor[[]int]()).Elem()
+
 	err := setSliceFromAny(field, []any{1, 2, 3}, field.Type())
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
+
 	got := field.Interface().([]int)
+
 	want := []int{1, 2, 3}
 	if !reflect.DeepEqual(got, want) {
 		t.Errorf("got %v, want %v", got, want)
@@ -926,11 +1025,14 @@ func TestSetSliceFromAny_IntFromYAML(t *testing.T) {
 func TestSetSliceFromAny_Float64FromYAMLInt(t *testing.T) {
 	// YAML decodes integers as int; []float64 field should accept them
 	field := reflect.New(reflect.TypeFor[[]float64]()).Elem()
+
 	err := setSliceFromAny(field, []any{1, 2, 3}, field.Type())
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
+
 	got := field.Interface().([]float64)
+
 	want := []float64{1, 2, 3}
 	if !reflect.DeepEqual(got, want) {
 		t.Errorf("got %v, want %v", got, want)
@@ -939,6 +1041,7 @@ func TestSetSliceFromAny_Float64FromYAMLInt(t *testing.T) {
 
 func TestSetMapFromAny_NotAMap(t *testing.T) {
 	field := reflect.New(reflect.TypeFor[map[string]string]()).Elem()
+
 	err := setMapFromAny(field, "not a map", field.Type())
 	if err == nil {
 		t.Fatal("expected error")
@@ -947,6 +1050,7 @@ func TestSetMapFromAny_NotAMap(t *testing.T) {
 
 func TestSetMapFromAny_StringValueMismatch(t *testing.T) {
 	field := reflect.New(reflect.TypeFor[map[string]string]()).Elem()
+
 	err := setMapFromAny(field, map[string]any{"key": 42}, field.Type())
 	if err == nil {
 		t.Fatal("expected error for non-string value in map[string]string")
@@ -963,6 +1067,7 @@ func TestSlice_EnvCommaSeparated(t *testing.T) {
 	}
 
 	var cfg Config
+
 	fields := extractFields(reflect.ValueOf(&cfg).Elem(), "", nil)
 
 	t.Setenv("TAGS", "web,api,v2")
@@ -976,9 +1081,11 @@ func TestSlice_EnvCommaSeparated(t *testing.T) {
 	if !reflect.DeepEqual(cfg.Tags, []string{"web", "api", "v2"}) {
 		t.Errorf("Tags = %v", cfg.Tags)
 	}
+
 	if !reflect.DeepEqual(cfg.Ports, []int{8080, 8443, 9090}) {
 		t.Errorf("Ports = %v", cfg.Ports)
 	}
+
 	if !reflect.DeepEqual(cfg.Rates, []float64{1.5, 2.7, 3.14}) {
 		t.Errorf("Rates = %v", cfg.Rates)
 	}
@@ -992,6 +1099,7 @@ func TestSlice_FlagCommaSeparated(t *testing.T) {
 	}
 
 	var cfg Config
+
 	fields := extractFields(reflect.ValueOf(&cfg).Elem(), "", nil)
 
 	args := []string{"--tags", "web,api,v2", "--ports", "8080,8443,9090", "--rates", "1.5,2.7,3.14"}
@@ -1003,9 +1111,11 @@ func TestSlice_FlagCommaSeparated(t *testing.T) {
 	if !reflect.DeepEqual(cfg.Tags, []string{"web", "api", "v2"}) {
 		t.Errorf("Tags = %v", cfg.Tags)
 	}
+
 	if !reflect.DeepEqual(cfg.Ports, []int{8080, 8443, 9090}) {
 		t.Errorf("Ports = %v", cfg.Ports)
 	}
+
 	if !reflect.DeepEqual(cfg.Rates, []float64{1.5, 2.7, 3.14}) {
 		t.Errorf("Rates = %v", cfg.Rates)
 	}
@@ -1016,11 +1126,14 @@ func TestSlice_FlagCommaSeparated(t *testing.T) {
 func TestSetSliceFromAny_DurationSlice(t *testing.T) {
 	t.Run("basic", func(t *testing.T) {
 		field := reflect.New(reflect.TypeFor[[]time.Duration]()).Elem()
+
 		err := setSliceFromAny(field, []any{"5s", "10s", "1m"}, field.Type())
 		if err != nil {
 			t.Fatalf("unexpected error: %v", err)
 		}
+
 		got := field.Interface().([]time.Duration)
+
 		want := []time.Duration{5 * time.Second, 10 * time.Second, time.Minute}
 		if !reflect.DeepEqual(got, want) {
 			t.Errorf("got %v, want %v", got, want)
@@ -1029,11 +1142,14 @@ func TestSetSliceFromAny_DurationSlice(t *testing.T) {
 
 	t.Run("compound durations", func(t *testing.T) {
 		field := reflect.New(reflect.TypeFor[[]time.Duration]()).Elem()
+
 		err := setSliceFromAny(field, []any{"1h30m", "500µs"}, field.Type())
 		if err != nil {
 			t.Fatalf("unexpected error: %v", err)
 		}
+
 		got := field.Interface().([]time.Duration)
+
 		want := []time.Duration{time.Hour + 30*time.Minute, 500 * time.Microsecond}
 		if !reflect.DeepEqual(got, want) {
 			t.Errorf("got %v, want %v", got, want)
@@ -1042,10 +1158,12 @@ func TestSetSliceFromAny_DurationSlice(t *testing.T) {
 
 	t.Run("empty", func(t *testing.T) {
 		field := reflect.New(reflect.TypeFor[[]time.Duration]()).Elem()
+
 		err := setSliceFromAny(field, []any{}, field.Type())
 		if err != nil {
 			t.Fatalf("unexpected error: %v", err)
 		}
+
 		got := field.Interface().([]time.Duration)
 		if got == nil || len(got) != 0 {
 			t.Errorf("got %v, want empty non-nil slice", got)
@@ -1054,6 +1172,7 @@ func TestSetSliceFromAny_DurationSlice(t *testing.T) {
 
 	t.Run("type mismatch", func(t *testing.T) {
 		field := reflect.New(reflect.TypeFor[[]time.Duration]()).Elem()
+
 		err := setSliceFromAny(field, []any{"5s", 123}, field.Type())
 		if err == nil {
 			t.Fatal("expected error for int element in duration slice")
@@ -1064,11 +1183,14 @@ func TestSetSliceFromAny_DurationSlice(t *testing.T) {
 func TestSetSliceFromAny_BoolSlice(t *testing.T) {
 	t.Run("basic", func(t *testing.T) {
 		field := reflect.New(reflect.TypeFor[[]bool]()).Elem()
+
 		err := setSliceFromAny(field, []any{true, false, true}, field.Type())
 		if err != nil {
 			t.Fatalf("unexpected error: %v", err)
 		}
+
 		got := field.Interface().([]bool)
+
 		want := []bool{true, false, true}
 		if !reflect.DeepEqual(got, want) {
 			t.Errorf("got %v, want %v", got, want)
@@ -1077,6 +1199,7 @@ func TestSetSliceFromAny_BoolSlice(t *testing.T) {
 
 	t.Run("type mismatch", func(t *testing.T) {
 		field := reflect.New(reflect.TypeFor[[]bool]()).Elem()
+
 		err := setSliceFromAny(field, []any{true, "notbool"}, field.Type())
 		if err == nil {
 			t.Fatal("expected error for string element in bool slice")
@@ -1087,11 +1210,14 @@ func TestSetSliceFromAny_BoolSlice(t *testing.T) {
 func TestSetSliceFromAny_Int64Slice(t *testing.T) {
 	t.Run("from float64 (JSON)", func(t *testing.T) {
 		field := reflect.New(reflect.TypeFor[[]int64]()).Elem()
+
 		err := setSliceFromAny(field, []any{float64(100), float64(200)}, field.Type())
 		if err != nil {
 			t.Fatalf("unexpected error: %v", err)
 		}
+
 		got := field.Interface().([]int64)
+
 		want := []int64{100, 200}
 		if !reflect.DeepEqual(got, want) {
 			t.Errorf("got %v, want %v", got, want)
@@ -1100,11 +1226,14 @@ func TestSetSliceFromAny_Int64Slice(t *testing.T) {
 
 	t.Run("from int and int64 (YAML/TOML)", func(t *testing.T) {
 		field := reflect.New(reflect.TypeFor[[]int64]()).Elem()
+
 		err := setSliceFromAny(field, []any{int(100), int64(200)}, field.Type())
 		if err != nil {
 			t.Fatalf("unexpected error: %v", err)
 		}
+
 		got := field.Interface().([]int64)
+
 		want := []int64{100, 200}
 		if !reflect.DeepEqual(got, want) {
 			t.Errorf("got %v, want %v", got, want)
@@ -1113,6 +1242,7 @@ func TestSetSliceFromAny_Int64Slice(t *testing.T) {
 
 	t.Run("non-integral float64", func(t *testing.T) {
 		field := reflect.New(reflect.TypeFor[[]int64]()).Elem()
+
 		err := setSliceFromAny(field, []any{float64(1.5)}, field.Type())
 		if err == nil {
 			t.Fatal("expected error for non-integral float64 in int64 slice")
@@ -1126,6 +1256,7 @@ func TestApplyMap_DurationSlice(t *testing.T) {
 	}
 
 	var cfg Config
+
 	fields := extractFields(reflect.ValueOf(&cfg).Elem(), "", nil)
 
 	data := map[string]any{
@@ -1148,6 +1279,7 @@ func TestApplyMap_BoolSlice(t *testing.T) {
 	}
 
 	var cfg Config
+
 	fields := extractFields(reflect.ValueOf(&cfg).Elem(), "", nil)
 
 	data := map[string]any{
@@ -1170,6 +1302,7 @@ func TestApplyMap_Int64Slice(t *testing.T) {
 	}
 
 	var cfg Config
+
 	fields := extractFields(reflect.ValueOf(&cfg).Elem(), "", nil)
 
 	data := map[string]any{
@@ -1192,6 +1325,7 @@ func TestSlice_DurationEnvCommaSeparated(t *testing.T) {
 	}
 
 	var cfg Config
+
 	fields := extractFields(reflect.ValueOf(&cfg).Elem(), "", nil)
 
 	t.Setenv("TIMEOUTS", "5s,30s,2m")
@@ -1212,6 +1346,7 @@ func TestSlice_DurationFlagCommaSeparated(t *testing.T) {
 	}
 
 	var cfg Config
+
 	fields := extractFields(reflect.ValueOf(&cfg).Elem(), "", nil)
 
 	args := []string{"--timeouts", "5s,30s,2m"}
@@ -1232,6 +1367,7 @@ func TestSlice_BoolEnvCommaSeparated(t *testing.T) {
 	}
 
 	var cfg Config
+
 	fields := extractFields(reflect.ValueOf(&cfg).Elem(), "", nil)
 
 	t.Setenv("FLAGS", "true,false,true")
@@ -1252,6 +1388,7 @@ func TestSlice_BoolFlagCommaSeparated(t *testing.T) {
 	}
 
 	var cfg Config
+
 	fields := extractFields(reflect.ValueOf(&cfg).Elem(), "", nil)
 
 	args := []string{"--flags", "true,false,true"}
@@ -1272,12 +1409,14 @@ func TestSlice_DurationPriorityChain(t *testing.T) {
 	}
 
 	var cfg Config
+
 	fields := extractFields(reflect.ValueOf(&cfg).Elem(), "", nil)
 
 	// Step 1: defaults
 	if err := applyDefaults(&cfg, fields); err != nil {
 		t.Fatalf("applyDefaults: unexpected error: %v", err)
 	}
+
 	want := []time.Duration{time.Second, 2 * time.Second}
 	if !reflect.DeepEqual(cfg.Timeouts, want) {
 		t.Fatalf("after defaults: Timeouts = %v, want %v", cfg.Timeouts, want)
@@ -1290,6 +1429,7 @@ func TestSlice_DurationPriorityChain(t *testing.T) {
 	if err := applyMap(&cfg, data, fields); err != nil {
 		t.Fatalf("applyMap: unexpected error: %v", err)
 	}
+
 	want = []time.Duration{5 * time.Second, 10 * time.Second}
 	if !reflect.DeepEqual(cfg.Timeouts, want) {
 		t.Fatalf("after file: Timeouts = %v, want %v", cfg.Timeouts, want)
@@ -1297,9 +1437,11 @@ func TestSlice_DurationPriorityChain(t *testing.T) {
 
 	// Step 3: env overrides file
 	t.Setenv("TIMEOUTS", "30s,1m")
+
 	if err := applyEnv(&cfg, fields, ""); err != nil {
 		t.Fatalf("applyEnv: unexpected error: %v", err)
 	}
+
 	want = []time.Duration{30 * time.Second, time.Minute}
 	if !reflect.DeepEqual(cfg.Timeouts, want) {
 		t.Fatalf("after env: Timeouts = %v, want %v", cfg.Timeouts, want)
@@ -1310,6 +1452,7 @@ func TestSlice_DurationPriorityChain(t *testing.T) {
 	if err := applyFlags(&cfg, fields, args, nil); err != nil {
 		t.Fatalf("applyFlags: unexpected error: %v", err)
 	}
+
 	want = []time.Duration{2 * time.Minute, 3 * time.Minute}
 	if !reflect.DeepEqual(cfg.Timeouts, want) {
 		t.Fatalf("after flags: Timeouts = %v, want %v", cfg.Timeouts, want)
@@ -1322,12 +1465,14 @@ func TestLoadFile_UnsupportedFormat(t *testing.T) {
 	}
 
 	var cfg Config
+
 	fields := extractFields(reflect.ValueOf(&cfg).Elem(), "", nil)
 
 	err := loadFile(&cfg, "testdata/config.xml", fields)
 	if err == nil {
 		t.Fatal("loadFile: expected error for unsupported format")
 	}
+
 	if !strings.Contains(err.Error(), "unsupported") {
 		t.Errorf("error = %q, want it to mention 'unsupported'", err.Error())
 	}

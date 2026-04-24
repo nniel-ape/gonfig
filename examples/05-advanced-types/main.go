@@ -38,21 +38,25 @@ func main() {
 	fmt.Printf("  WriteTimeout: %s\n", cfg.Server.WriteTimeout)
 
 	fmt.Println("AllowedOrigins:")
+
 	for _, o := range cfg.AllowedOrigins {
 		fmt.Printf("  - %s\n", o)
 	}
 
 	fmt.Println("RateLimits:")
+
 	for _, r := range cfg.RateLimits {
 		fmt.Printf("  - %d req/min\n", r)
 	}
 
 	fmt.Println("Weights:")
+
 	for _, w := range cfg.Weights {
 		fmt.Printf("  - %.2f\n", w)
 	}
 
 	fmt.Println("Labels:")
+
 	for k, v := range cfg.Labels {
 		fmt.Printf("  %s: %s\n", k, v)
 	}

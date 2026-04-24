@@ -26,6 +26,7 @@ type Config struct {
 
 func main() {
 	var cfg Config
+
 	err := gonfig.Load(&cfg)
 
 	// Check if the error is a validation error using errors.Is.
@@ -37,11 +38,13 @@ func main() {
 	var ve *gonfig.ValidationError
 	if errors.As(err, &ve) {
 		fmt.Printf("\nFound %d validation error(s):\n\n", len(ve.Errors))
+
 		for i, fe := range ve.Errors {
 			fmt.Printf("  %d. Field:   %s\n", i+1, fe.Field)
 			fmt.Printf("     Rule:    %s\n", fe.Rule)
 			fmt.Printf("     Message: %s\n\n", fe.Message)
 		}
+
 		os.Exit(1)
 	}
 

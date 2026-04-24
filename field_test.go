@@ -16,6 +16,7 @@ func TestExtractFields_FlatStruct(t *testing.T) {
 	}
 
 	var cfg Config
+
 	fields := extractFields(reflect.ValueOf(cfg), "", nil)
 
 	if len(fields) != 5 {
@@ -43,15 +44,19 @@ func TestExtractFields_FlatStruct(t *testing.T) {
 			if f.Name != tt.name {
 				t.Errorf("Name = %q, want %q", f.Name, tt.name)
 			}
+
 			if f.Path != tt.path {
 				t.Errorf("Path = %q, want %q", f.Path, tt.path)
 			}
+
 			if f.EnvName != tt.envName {
 				t.Errorf("EnvName = %q, want %q", f.EnvName, tt.envName)
 			}
+
 			if f.FlagName != tt.flagName {
 				t.Errorf("FlagName = %q, want %q", f.FlagName, tt.flagName)
 			}
+
 			if f.ConfigKey != tt.configKey {
 				t.Errorf("ConfigKey = %q, want %q", f.ConfigKey, tt.configKey)
 			}
@@ -64,12 +69,14 @@ func TestExtractFields_NestedStruct(t *testing.T) {
 		Host string
 		Port int
 	}
+
 	type Config struct {
 		DB       DB
 		LogLevel string
 	}
 
 	var cfg Config
+
 	fields := extractFields(reflect.ValueOf(cfg), "", nil)
 
 	if len(fields) != 3 {
@@ -95,15 +102,19 @@ func TestExtractFields_NestedStruct(t *testing.T) {
 			if f.Name != tt.name {
 				t.Errorf("Name = %q, want %q", f.Name, tt.name)
 			}
+
 			if f.Path != tt.path {
 				t.Errorf("Path = %q, want %q", f.Path, tt.path)
 			}
+
 			if f.EnvName != tt.envName {
 				t.Errorf("EnvName = %q, want %q", f.EnvName, tt.envName)
 			}
+
 			if f.FlagName != tt.flagName {
 				t.Errorf("FlagName = %q, want %q", f.FlagName, tt.flagName)
 			}
+
 			if f.ConfigKey != tt.configKey {
 				t.Errorf("ConfigKey = %q, want %q", f.ConfigKey, tt.configKey)
 			}
@@ -116,11 +127,13 @@ func TestExtractFields_StructGonfigTag(t *testing.T) {
 		Name   string
 		Weight float64
 	}
+
 	type Config struct {
 		Strategy Strategy `gonfig:"latemomentum"`
 	}
 
 	var cfg Config
+
 	fields := extractFields(reflect.ValueOf(cfg), "", nil)
 
 	if len(fields) != 2 {
@@ -145,15 +158,19 @@ func TestExtractFields_StructGonfigTag(t *testing.T) {
 			if f.Name != tt.name {
 				t.Errorf("Name = %q, want %q", f.Name, tt.name)
 			}
+
 			if f.Path != tt.path {
 				t.Errorf("Path = %q, want %q", f.Path, tt.path)
 			}
+
 			if f.EnvName != tt.envName {
 				t.Errorf("EnvName = %q, want %q", f.EnvName, tt.envName)
 			}
+
 			if f.FlagName != tt.flagName {
 				t.Errorf("FlagName = %q, want %q", f.FlagName, tt.flagName)
 			}
+
 			if f.ConfigKey != tt.configKey {
 				t.Errorf("ConfigKey = %q, want %q", f.ConfigKey, tt.configKey)
 			}
@@ -165,14 +182,17 @@ func TestExtractFields_NestedStructGonfigTags(t *testing.T) {
 	type Inner struct {
 		Value string
 	}
+
 	type Mid struct {
 		Inner Inner `gonfig:"custom_inner"`
 	}
+
 	type Config struct {
 		Mid Mid `gonfig:"top"`
 	}
 
 	var cfg Config
+
 	fields := extractFields(reflect.ValueOf(cfg), "", nil)
 
 	if len(fields) != 1 {
@@ -183,12 +203,15 @@ func TestExtractFields_NestedStructGonfigTags(t *testing.T) {
 	if f.Path != "top.custom_inner.Value" {
 		t.Errorf("Path = %q, want %q", f.Path, "top.custom_inner.Value")
 	}
+
 	if f.ConfigKey != "top.custom_inner.value" {
 		t.Errorf("ConfigKey = %q, want %q", f.ConfigKey, "top.custom_inner.value")
 	}
+
 	if f.EnvName != "TOP_CUSTOM_INNER_VALUE" {
 		t.Errorf("EnvName = %q, want %q", f.EnvName, "TOP_CUSTOM_INNER_VALUE")
 	}
+
 	if f.FlagName != "top-custom-inner-value" {
 		t.Errorf("FlagName = %q, want %q", f.FlagName, "top-custom-inner-value")
 	}
@@ -203,6 +226,7 @@ func TestExtractFields_ExplicitTagOverrides(t *testing.T) {
 	}
 
 	var cfg Config
+
 	fields := extractFields(reflect.ValueOf(cfg), "", nil)
 
 	if len(fields) != 4 {
@@ -227,9 +251,11 @@ func TestExtractFields_ExplicitTagOverrides(t *testing.T) {
 			if f.EnvName != tt.envName {
 				t.Errorf("EnvName = %q, want %q", f.EnvName, tt.envName)
 			}
+
 			if f.FlagName != tt.flagName {
 				t.Errorf("FlagName = %q, want %q", f.FlagName, tt.flagName)
 			}
+
 			if f.ConfigKey != tt.configKey {
 				t.Errorf("ConfigKey = %q, want %q", f.ConfigKey, tt.configKey)
 			}
@@ -245,15 +271,18 @@ func TestExtractFields_Tags(t *testing.T) {
 	}
 
 	var cfg Config
+
 	fields := extractFields(reflect.ValueOf(cfg), "", nil)
 
 	// Host
 	if !fields[0].HasDefault || fields[0].DefaultVal != "localhost" {
 		t.Errorf("Host default: HasDefault=%v, DefaultVal=%q", fields[0].HasDefault, fields[0].DefaultVal)
 	}
+
 	if fields[0].Description != "database host" {
 		t.Errorf("Host description = %q", fields[0].Description)
 	}
+
 	if fields[0].ValidateRules != "required" {
 		t.Errorf("Host validate = %q", fields[0].ValidateRules)
 	}
@@ -267,6 +296,7 @@ func TestExtractFields_Tags(t *testing.T) {
 	if fields[2].HasDefault {
 		t.Error("Name should not have default")
 	}
+
 	if fields[2].Description != "" {
 		t.Errorf("Name description should be empty, got %q", fields[2].Description)
 	}
@@ -279,12 +309,14 @@ func TestExtractFields_UnexportedFieldsSkipped(t *testing.T) {
 	}
 
 	var cfg Config
+
 	_ = cfg.internal // suppress unused field warning; field exists to test unexported-field skipping
 	fields := extractFields(reflect.ValueOf(cfg), "", nil)
 
 	if len(fields) != 1 {
 		t.Fatalf("expected 1 field (unexported skipped), got %d", len(fields))
 	}
+
 	if fields[0].Name != "Host" {
 		t.Errorf("expected Host, got %q", fields[0].Name)
 	}
@@ -294,12 +326,14 @@ func TestExtractFields_IndexPath(t *testing.T) {
 	type Inner struct {
 		Value string
 	}
+
 	type Config struct {
 		Name  string
 		Inner Inner
 	}
 
 	var cfg Config
+
 	fields := extractFields(reflect.ValueOf(cfg), "", nil)
 
 	// Name is at index [0]
@@ -320,6 +354,7 @@ func TestExtractFields_ShortFlagTag(t *testing.T) {
 	}
 
 	var cfg Config
+
 	fields := extractFields(reflect.ValueOf(cfg), "", nil)
 
 	if len(fields) != 3 {
@@ -329,9 +364,11 @@ func TestExtractFields_ShortFlagTag(t *testing.T) {
 	if fields[0].ShortFlag != "p" {
 		t.Errorf("Port ShortFlag = %q, want %q", fields[0].ShortFlag, "p")
 	}
+
 	if fields[1].ShortFlag != "d" {
 		t.Errorf("Debug ShortFlag = %q, want %q", fields[1].ShortFlag, "d")
 	}
+
 	if fields[2].ShortFlag != "" {
 		t.Errorf("Host ShortFlag = %q, want empty", fields[2].ShortFlag)
 	}

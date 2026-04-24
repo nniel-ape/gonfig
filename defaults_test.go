@@ -16,6 +16,7 @@ func TestApplyDefaults_BasicTypes(t *testing.T) {
 	}
 
 	var cfg Config
+
 	fields := extractFields(reflect.ValueOf(cfg), "", nil)
 
 	if err := applyDefaults(&cfg, fields); err != nil {
@@ -25,15 +26,19 @@ func TestApplyDefaults_BasicTypes(t *testing.T) {
 	if cfg.Host != "localhost" {
 		t.Errorf("Host = %q, want %q", cfg.Host, "localhost")
 	}
+
 	if cfg.Port != 5432 {
 		t.Errorf("Port = %d, want %d", cfg.Port, 5432)
 	}
+
 	if cfg.Debug != true {
 		t.Errorf("Debug = %v, want true", cfg.Debug)
 	}
+
 	if cfg.Rate != 0.75 {
 		t.Errorf("Rate = %f, want 0.75", cfg.Rate)
 	}
+
 	if cfg.Timeout != 30*time.Second {
 		t.Errorf("Timeout = %v, want 30s", cfg.Timeout)
 	}
@@ -60,6 +65,7 @@ func TestApplyDefaults_MissingDefaultTag(t *testing.T) {
 	if cfg.Port != 8080 {
 		t.Errorf("Port = %d, want 8080 (unchanged)", cfg.Port)
 	}
+
 	if cfg.Name != "original" {
 		t.Errorf("Name = %q, want %q (unchanged)", cfg.Name, "original")
 	}
@@ -71,6 +77,7 @@ func TestApplyDefaults_InvalidDefaultValue(t *testing.T) {
 	}
 
 	var cfg Config
+
 	fields := extractFields(reflect.ValueOf(cfg), "", nil)
 
 	err := applyDefaults(&cfg, fields)
@@ -85,6 +92,7 @@ func TestApplyDefaults_InvalidBoolDefault(t *testing.T) {
 	}
 
 	var cfg Config
+
 	fields := extractFields(reflect.ValueOf(cfg), "", nil)
 
 	err := applyDefaults(&cfg, fields)
@@ -98,12 +106,14 @@ func TestApplyDefaults_NestedStruct(t *testing.T) {
 		Host string `default:"localhost"`
 		Port int    `default:"5432"`
 	}
+
 	type Config struct {
 		DB       DB
 		LogLevel string `default:"info"`
 	}
 
 	var cfg Config
+
 	fields := extractFields(reflect.ValueOf(cfg), "", nil)
 
 	if err := applyDefaults(&cfg, fields); err != nil {
@@ -113,9 +123,11 @@ func TestApplyDefaults_NestedStruct(t *testing.T) {
 	if cfg.DB.Host != "localhost" {
 		t.Errorf("DB.Host = %q, want %q", cfg.DB.Host, "localhost")
 	}
+
 	if cfg.DB.Port != 5432 {
 		t.Errorf("DB.Port = %d, want %d", cfg.DB.Port, 5432)
 	}
+
 	if cfg.LogLevel != "info" {
 		t.Errorf("LogLevel = %q, want %q", cfg.LogLevel, "info")
 	}
@@ -163,6 +175,7 @@ func TestApplyDefaults_SliceDefault(t *testing.T) {
 	}
 
 	var cfg Config
+
 	fields := extractFields(reflect.ValueOf(cfg), "", nil)
 
 	if err := applyDefaults(&cfg, fields); err != nil {

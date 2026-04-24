@@ -17,6 +17,7 @@ func ExampleLoad() {
 	}
 
 	var cfg Config
+
 	err := gonfig.Load(&cfg)
 	if err != nil {
 		fmt.Println("error:", err)
@@ -44,6 +45,7 @@ func ExampleLoad_withFileContent() {
 	data := []byte(`{"db":{"host":"myhost","port":3306},"log_level":"debug"}`)
 
 	var cfg Config
+
 	err := gonfig.Load(&cfg, gonfig.WithFileContent(data, gonfig.JSON))
 	if err != nil {
 		fmt.Println("error:", err)
@@ -65,6 +67,7 @@ func ExampleLoad_validation() {
 	}
 
 	var cfg Config
+
 	err := gonfig.Load(&cfg)
 
 	var ve *gonfig.ValidationError
@@ -102,6 +105,7 @@ func ExampleLoad_structGonfigTag() {
 		Name   string  `default:"momentum"`
 		Weight float64 `default:"0.5"`
 	}
+
 	type Config struct {
 		Strategy Strategy `gonfig:"lm"`
 	}
@@ -109,6 +113,7 @@ func ExampleLoad_structGonfigTag() {
 	data := []byte(`{"lm":{"name":"mean_revert","weight":0.8}}`)
 
 	var cfg Config
+
 	err := gonfig.Load(&cfg, gonfig.WithFileContent(data, gonfig.JSON))
 	if err != nil {
 		fmt.Println("error:", err)
@@ -129,6 +134,7 @@ func ExampleWithFlags() {
 	}
 
 	var cfg Config
+
 	err := gonfig.Load(&cfg, gonfig.WithFlags([]string{"--host", "example.com", "--port", "9090"}))
 	if err != nil {
 		fmt.Println("error:", err)

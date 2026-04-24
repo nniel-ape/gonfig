@@ -20,10 +20,12 @@ func TestSetFieldValue_String(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			var s string
+
 			v := reflect.ValueOf(&s).Elem()
 			if err := setFieldValue(v, tt.raw); err != nil {
 				t.Fatalf("unexpected error: %v", err)
 			}
+
 			if s != tt.want {
 				t.Errorf("got %q, want %q", s, tt.want)
 			}
@@ -49,17 +51,22 @@ func TestSetFieldValue_Int(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			var n int
+
 			v := reflect.ValueOf(&n).Elem()
+
 			err := setFieldValue(v, tt.raw)
 			if tt.wantErr {
 				if err == nil {
 					t.Fatal("expected error, got nil")
 				}
+
 				return
 			}
+
 			if err != nil {
 				t.Fatalf("unexpected error: %v", err)
 			}
+
 			if n != tt.want {
 				t.Errorf("got %d, want %d", n, tt.want)
 			}
@@ -69,10 +76,12 @@ func TestSetFieldValue_Int(t *testing.T) {
 
 func TestSetFieldValue_Int64(t *testing.T) {
 	var n int64
+
 	v := reflect.ValueOf(&n).Elem()
 	if err := setFieldValue(v, "9999999999"); err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
+
 	if n != 9999999999 {
 		t.Errorf("got %d, want 9999999999", n)
 	}
@@ -96,17 +105,22 @@ func TestSetFieldValue_Float64(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			var f float64
+
 			v := reflect.ValueOf(&f).Elem()
+
 			err := setFieldValue(v, tt.raw)
 			if tt.wantErr {
 				if err == nil {
 					t.Fatal("expected error, got nil")
 				}
+
 				return
 			}
+
 			if err != nil {
 				t.Fatalf("unexpected error: %v", err)
 			}
+
 			if f != tt.want {
 				t.Errorf("got %f, want %f", f, tt.want)
 			}
@@ -133,17 +147,22 @@ func TestSetFieldValue_Bool(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			var b bool
+
 			v := reflect.ValueOf(&b).Elem()
+
 			err := setFieldValue(v, tt.raw)
 			if tt.wantErr {
 				if err == nil {
 					t.Fatal("expected error, got nil")
 				}
+
 				return
 			}
+
 			if err != nil {
 				t.Fatalf("unexpected error: %v", err)
 			}
+
 			if b != tt.want {
 				t.Errorf("got %v, want %v", b, tt.want)
 			}
@@ -168,17 +187,22 @@ func TestSetFieldValue_Duration(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			var d time.Duration
+
 			v := reflect.ValueOf(&d).Elem()
+
 			err := setFieldValue(v, tt.raw)
 			if tt.wantErr {
 				if err == nil {
 					t.Fatal("expected error, got nil")
 				}
+
 				return
 			}
+
 			if err != nil {
 				t.Fatalf("unexpected error: %v", err)
 			}
+
 			if d != tt.want {
 				t.Errorf("got %v, want %v", d, tt.want)
 			}
@@ -201,10 +225,12 @@ func TestSetFieldValue_StringSlice(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			var s []string
+
 			v := reflect.ValueOf(&s).Elem()
 			if err := setFieldValue(v, tt.raw); err != nil {
 				t.Fatalf("unexpected error: %v", err)
 			}
+
 			if !reflect.DeepEqual(s, tt.want) {
 				t.Errorf("got %v, want %v", s, tt.want)
 			}
@@ -229,17 +255,22 @@ func TestSetFieldValue_IntSlice(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			var s []int
+
 			v := reflect.ValueOf(&s).Elem()
+
 			err := setFieldValue(v, tt.raw)
 			if tt.wantErr {
 				if err == nil {
 					t.Fatal("expected error, got nil")
 				}
+
 				return
 			}
+
 			if err != nil {
 				t.Fatalf("unexpected error: %v", err)
 			}
+
 			if !reflect.DeepEqual(s, tt.want) {
 				t.Errorf("got %v, want %v", s, tt.want)
 			}
@@ -265,17 +296,22 @@ func TestSetFieldValue_Float64Slice(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			var s []float64
+
 			v := reflect.ValueOf(&s).Elem()
+
 			err := setFieldValue(v, tt.raw)
 			if tt.wantErr {
 				if err == nil {
 					t.Fatal("expected error, got nil")
 				}
+
 				return
 			}
+
 			if err != nil {
 				t.Fatalf("unexpected error: %v", err)
 			}
+
 			if !reflect.DeepEqual(s, tt.want) {
 				t.Errorf("got %v, want %v", s, tt.want)
 			}
@@ -302,17 +338,22 @@ func TestSetFieldValue_DurationSlice(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			var s []time.Duration
+
 			v := reflect.ValueOf(&s).Elem()
+
 			err := setFieldValue(v, tt.raw)
 			if tt.wantErr {
 				if err == nil {
 					t.Fatal("expected error, got nil")
 				}
+
 				return
 			}
+
 			if err != nil {
 				t.Fatalf("unexpected error: %v", err)
 			}
+
 			if !reflect.DeepEqual(s, tt.want) {
 				t.Errorf("got %v, want %v", s, tt.want)
 			}
@@ -339,17 +380,22 @@ func TestSetFieldValue_BoolSlice(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			var s []bool
+
 			v := reflect.ValueOf(&s).Elem()
+
 			err := setFieldValue(v, tt.raw)
 			if tt.wantErr {
 				if err == nil {
 					t.Fatal("expected error, got nil")
 				}
+
 				return
 			}
+
 			if err != nil {
 				t.Fatalf("unexpected error: %v", err)
 			}
+
 			if !reflect.DeepEqual(s, tt.want) {
 				t.Errorf("got %v, want %v", s, tt.want)
 			}
@@ -375,17 +421,22 @@ func TestSetFieldValue_Int64Slice(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			var s []int64
+
 			v := reflect.ValueOf(&s).Elem()
+
 			err := setFieldValue(v, tt.raw)
 			if tt.wantErr {
 				if err == nil {
 					t.Fatal("expected error, got nil")
 				}
+
 				return
 			}
+
 			if err != nil {
 				t.Fatalf("unexpected error: %v", err)
 			}
+
 			if !reflect.DeepEqual(s, tt.want) {
 				t.Errorf("got %v, want %v", s, tt.want)
 			}
@@ -395,7 +446,9 @@ func TestSetFieldValue_Int64Slice(t *testing.T) {
 
 func TestSetFieldValue_UnsupportedType(t *testing.T) {
 	var c complex128
+
 	v := reflect.ValueOf(&c).Elem()
+
 	err := setFieldValue(v, "1+2i")
 	if err == nil {
 		t.Fatal("expected error for unsupported type, got nil")

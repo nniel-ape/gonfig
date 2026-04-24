@@ -22,6 +22,7 @@ type testConfig struct {
 func TestLoad_AllSourcesCombined_PriorityOrder(t *testing.T) {
 	// Create a temp YAML config file that sets db.host and log_level.
 	dir := t.TempDir()
+
 	cfgFile := filepath.Join(dir, "config.yaml")
 	if err := os.WriteFile(cfgFile, []byte("db:\n  host: filehost\nlog_level: warn\n"), 0o644); err != nil {
 		t.Fatal(err)
@@ -32,6 +33,7 @@ func TestLoad_AllSourcesCombined_PriorityOrder(t *testing.T) {
 
 	// Flag overrides everything for db-host.
 	var cfg testConfig
+
 	err := Load(&cfg,
 		WithFile(cfgFile),
 		WithEnvPrefix("APP"),
@@ -64,6 +66,7 @@ func TestLoad_AllSourcesCombined_PriorityOrder(t *testing.T) {
 
 func TestLoad_OnlyDefaults(t *testing.T) {
 	var cfg testConfig
+
 	err := Load(&cfg)
 	if err != nil {
 		t.Fatalf("Load() error: %v", err)
@@ -72,12 +75,15 @@ func TestLoad_OnlyDefaults(t *testing.T) {
 	if cfg.DB.Host != "localhost" {
 		t.Errorf("DB.Host = %q, want %q", cfg.DB.Host, "localhost")
 	}
+
 	if cfg.DB.Port != 5432 {
 		t.Errorf("DB.Port = %d, want %d", cfg.DB.Port, 5432)
 	}
+
 	if cfg.LogLevel != "info" {
 		t.Errorf("LogLevel = %q, want %q", cfg.LogLevel, "info")
 	}
+
 	if cfg.Debug != false {
 		t.Errorf("Debug = %v, want false", cfg.Debug)
 	}
@@ -85,6 +91,7 @@ func TestLoad_OnlyDefaults(t *testing.T) {
 
 func TestLoad_FileAndEnvOverride(t *testing.T) {
 	dir := t.TempDir()
+
 	cfgFile := filepath.Join(dir, "config.json")
 	if err := os.WriteFile(cfgFile, []byte(`{"db":{"host":"jsonhost","port":3306},"log_level":"debug"}`), 0o644); err != nil {
 		t.Fatal(err)
@@ -94,6 +101,7 @@ func TestLoad_FileAndEnvOverride(t *testing.T) {
 	t.Setenv("DB_HOST", "envhost")
 
 	var cfg testConfig
+
 	err := Load(&cfg,
 		WithFile(cfgFile),
 	)
@@ -119,6 +127,7 @@ func TestLoad_FileAndEnvOverride(t *testing.T) {
 
 func TestLoad_FlagOverridesEverything(t *testing.T) {
 	dir := t.TempDir()
+
 	cfgFile := filepath.Join(dir, "config.toml")
 	if err := os.WriteFile(cfgFile, []byte("log_level = \"warn\"\n\n[db]\nhost = \"tomlhost\"\nport = 9999\n"), 0o644); err != nil {
 		t.Fatal(err)
@@ -127,6 +136,7 @@ func TestLoad_FlagOverridesEverything(t *testing.T) {
 	t.Setenv("MYAPP_LOG_LEVEL", "error")
 
 	var cfg testConfig
+
 	err := Load(&cfg,
 		WithFile(cfgFile),
 		WithEnvPrefix("MYAPP"),
@@ -161,6 +171,7 @@ func TestLoad_NilTarget(t *testing.T) {
 
 func TestLoad_NonPointerTarget(t *testing.T) {
 	var cfg testConfig
+
 	err := Load(cfg) // not a pointer
 	if !errors.Is(err, ErrInvalidTarget) {
 		t.Errorf("Load(non-pointer) = %v, want ErrInvalidTarget", err)
@@ -169,6 +180,7 @@ func TestLoad_NonPointerTarget(t *testing.T) {
 
 func TestLoad_NonStructTarget(t *testing.T) {
 	s := "not a struct"
+
 	err := Load(&s)
 	if !errors.Is(err, ErrInvalidTarget) {
 		t.Errorf("Load(&string) = %v, want ErrInvalidTarget", err)
@@ -177,6 +189,7 @@ func TestLoad_NonStructTarget(t *testing.T) {
 
 func TestLoad_PointerToInt(t *testing.T) {
 	n := 42
+
 	err := Load(&n)
 	if !errors.Is(err, ErrInvalidTarget) {
 		t.Errorf("Load(&int) = %v, want ErrInvalidTarget", err)
@@ -185,6 +198,7 @@ func TestLoad_PointerToInt(t *testing.T) {
 
 func TestLoad_FileNotFound(t *testing.T) {
 	var cfg testConfig
+
 	err := Load(&cfg, WithFile("/nonexistent/path/config.yaml"))
 	if !errors.Is(err, ErrFileNotFound) {
 		t.Errorf("Load(missing file) = %v, want ErrFileNotFound", err)
@@ -193,7 +207,9 @@ func TestLoad_FileNotFound(t *testing.T) {
 
 func TestLoad_WithFileContent_JSON(t *testing.T) {
 	data := []byte(`{"db":{"host":"contenthost","port":7777},"log_level":"debug"}`)
+
 	var cfg testConfig
+
 	err := Load(&cfg, WithFileContent(data, JSON))
 	if err != nil {
 		t.Fatalf("Load() error: %v", err)
@@ -202,9 +218,11 @@ func TestLoad_WithFileContent_JSON(t *testing.T) {
 	if cfg.DB.Host != "contenthost" {
 		t.Errorf("DB.Host = %q, want %q", cfg.DB.Host, "contenthost")
 	}
+
 	if cfg.DB.Port != 7777 {
 		t.Errorf("DB.Port = %d, want %d", cfg.DB.Port, 7777)
 	}
+
 	if cfg.LogLevel != "debug" {
 		t.Errorf("LogLevel = %q, want %q", cfg.LogLevel, "debug")
 	}
@@ -212,7 +230,9 @@ func TestLoad_WithFileContent_JSON(t *testing.T) {
 
 func TestLoad_WithFileContent_YAML(t *testing.T) {
 	data := []byte("db:\n  host: yamlhost\nlog_level: warn\n")
+
 	var cfg testConfig
+
 	err := Load(&cfg, WithFileContent(data, YAML))
 	if err != nil {
 		t.Fatalf("Load() error: %v", err)
@@ -221,6 +241,7 @@ func TestLoad_WithFileContent_YAML(t *testing.T) {
 	if cfg.DB.Host != "yamlhost" {
 		t.Errorf("DB.Host = %q, want %q", cfg.DB.Host, "yamlhost")
 	}
+
 	if cfg.LogLevel != "warn" {
 		t.Errorf("LogLevel = %q, want %q", cfg.LogLevel, "warn")
 	}
@@ -228,7 +249,9 @@ func TestLoad_WithFileContent_YAML(t *testing.T) {
 
 func TestLoad_WithFileContent_TOML(t *testing.T) {
 	data := []byte("log_level = \"tomlval\"\n\n[db]\nhost = \"tomlhost\"\nport = 2222\n")
+
 	var cfg testConfig
+
 	err := Load(&cfg, WithFileContent(data, TOML))
 	if err != nil {
 		t.Fatalf("Load() error: %v", err)
@@ -237,6 +260,7 @@ func TestLoad_WithFileContent_TOML(t *testing.T) {
 	if cfg.DB.Host != "tomlhost" {
 		t.Errorf("DB.Host = %q, want %q", cfg.DB.Host, "tomlhost")
 	}
+
 	if cfg.DB.Port != 2222 {
 		t.Errorf("DB.Port = %d, want %d", cfg.DB.Port, 2222)
 	}
@@ -244,7 +268,9 @@ func TestLoad_WithFileContent_TOML(t *testing.T) {
 
 func TestLoad_WithFileContent_InvalidJSON(t *testing.T) {
 	data := []byte(`{invalid json}`)
+
 	var cfg testConfig
+
 	err := Load(&cfg, WithFileContent(data, JSON))
 	if !errors.Is(err, ErrParse) {
 		t.Errorf("Load(invalid content) = %v, want ErrParse", err)
@@ -253,7 +279,9 @@ func TestLoad_WithFileContent_InvalidJSON(t *testing.T) {
 
 func TestLoad_EmptyStruct(t *testing.T) {
 	type Empty struct{}
+
 	var cfg Empty
+
 	err := Load(&cfg)
 	if err != nil {
 		t.Fatalf("Load() error: %v", err)
@@ -262,6 +290,7 @@ func TestLoad_EmptyStruct(t *testing.T) {
 
 func TestLoad_WithFlags_EmptyArgs(t *testing.T) {
 	var cfg testConfig
+
 	err := Load(&cfg, WithFlags([]string{}))
 	if err != nil {
 		t.Fatalf("Load() error: %v", err)
@@ -278,6 +307,7 @@ func TestLoad_EnvWithPrefix(t *testing.T) {
 	t.Setenv("MYAPP_DB_PORT", "9999")
 
 	var cfg testConfig
+
 	err := Load(&cfg, WithEnvPrefix("MYAPP"))
 	if err != nil {
 		t.Fatalf("Load() error: %v", err)
@@ -286,6 +316,7 @@ func TestLoad_EnvWithPrefix(t *testing.T) {
 	if cfg.DB.Host != "prefixhost" {
 		t.Errorf("DB.Host = %q, want %q", cfg.DB.Host, "prefixhost")
 	}
+
 	if cfg.DB.Port != 9999 {
 		t.Errorf("DB.Port = %d, want %d", cfg.DB.Port, 9999)
 	}
@@ -305,6 +336,7 @@ func TestLoad_MultipleFiles_LaterOverridesEarlier(t *testing.T) {
 	}
 
 	var cfg testConfig
+
 	err := Load(&cfg, WithFile(file1), WithFile(file2))
 	if err != nil {
 		t.Fatalf("Load() error: %v", err)
@@ -332,7 +364,9 @@ func TestLoad_InterleavedFileContentAndFile_PreservesOrder(t *testing.T) {
 
 	// Inline content is specified first, file second — file should win (later overrides earlier).
 	contentData := []byte(`{"db":{"host":"frominline"}}`)
+
 	var cfg testConfig
+
 	err := Load(&cfg, WithFileContent(contentData, JSON), WithFile(cfgFile))
 	if err != nil {
 		t.Fatalf("Load() error: %v", err)
@@ -354,7 +388,9 @@ func TestLoad_InterleavedFileAndFileContent_PreservesOrder(t *testing.T) {
 
 	// File is specified first, inline content second — inline should win (later overrides earlier).
 	contentData := []byte(`{"db":{"host":"frominline"}}`)
+
 	var cfg testConfig
+
 	err := Load(&cfg, WithFile(cfgFile), WithFileContent(contentData, JSON))
 	if err != nil {
 		t.Fatalf("Load() error: %v", err)
@@ -369,6 +405,7 @@ func TestLoad_InvalidEnvValue(t *testing.T) {
 	t.Setenv("DB_PORT", "not-a-number")
 
 	var cfg testConfig
+
 	err := Load(&cfg)
 	if !errors.Is(err, ErrParse) {
 		t.Errorf("Load(invalid env) = %v, want ErrParse", err)
@@ -377,6 +414,7 @@ func TestLoad_InvalidEnvValue(t *testing.T) {
 
 func TestLoad_InvalidFlagValue(t *testing.T) {
 	var cfg testConfig
+
 	err := Load(&cfg, WithFlags([]string{"--db-port", "not-a-number"}))
 	if !errors.Is(err, ErrParse) {
 		t.Errorf("Load(invalid flag) = %v, want ErrParse", err)
@@ -399,6 +437,7 @@ func TestLoad_WithTestdataFiles(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			var cfg testConfig
+
 			err := Load(&cfg, WithFile(tt.file))
 			if err != nil {
 				t.Fatalf("Load() error: %v", err)
@@ -407,6 +446,7 @@ func TestLoad_WithTestdataFiles(t *testing.T) {
 			if cfg.DB.Host != tt.wantHost {
 				t.Errorf("DB.Host = %q, want %q", cfg.DB.Host, tt.wantHost)
 			}
+
 			if cfg.DB.Port != tt.wantPort {
 				t.Errorf("DB.Port = %d, want %d", cfg.DB.Port, tt.wantPort)
 			}
@@ -416,16 +456,19 @@ func TestLoad_WithTestdataFiles(t *testing.T) {
 
 func TestLoad_UnsupportedFileFormat(t *testing.T) {
 	dir := t.TempDir()
+
 	cfgFile := filepath.Join(dir, "config.ini")
 	if err := os.WriteFile(cfgFile, []byte("[section]\nkey=value\n"), 0o644); err != nil {
 		t.Fatal(err)
 	}
 
 	var cfg testConfig
+
 	err := Load(&cfg, WithFile(cfgFile))
 	if err == nil {
 		t.Error("Load(unsupported format) should return error")
 	}
+
 	if !errors.Is(err, ErrParse) {
 		t.Errorf("Load(unsupported format) should return ErrParse, got: %v", err)
 	}
@@ -435,17 +478,22 @@ func TestLoad_UnsupportedFileFormat(t *testing.T) {
 // Returns a cleanup function (also registered via t.Cleanup).
 func swapAutoHelp(t *testing.T) (exitCode *int, printed *string) {
 	t.Helper()
+
 	oldExit := osExit
 	oldPrint := printFn
 
 	code := -1
+
 	var out string
+
 	osExit = func(c int) { code = c }
 	printFn = func(s string) { out = s }
+
 	t.Cleanup(func() {
 		osExit = oldExit
 		printFn = oldPrint
 	})
+
 	return &code, &out
 }
 
@@ -458,6 +506,7 @@ func TestLoad_AutoHelp_PrintsUsageAndExits(t *testing.T) {
 	}
 
 	var cfg Config
+
 	err := Load(&cfg,
 		WithFlags([]string{"--help"}),
 		WithEnvPrefix("APP"),
@@ -465,12 +514,15 @@ func TestLoad_AutoHelp_PrintsUsageAndExits(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Load() returned error: %v", err)
 	}
+
 	if *exitCode != 0 {
 		t.Errorf("exit code = %d, want 0", *exitCode)
 	}
+
 	if !strings.Contains(*printed, "APP_HOST") {
 		t.Errorf("usage should contain APP_HOST, got: %s", *printed)
 	}
+
 	if !strings.Contains(*printed, "--host") {
 		t.Errorf("usage should contain --host, got: %s", *printed)
 	}
@@ -484,13 +536,16 @@ func TestLoad_AutoHelp_ShortFlag(t *testing.T) {
 	}
 
 	var cfg Config
+
 	err := Load(&cfg, WithFlags([]string{"-h"}))
 	if err != nil {
 		t.Fatalf("Load() returned error: %v", err)
 	}
+
 	if *exitCode != 0 {
 		t.Errorf("exit code = %d, want 0", *exitCode)
 	}
+
 	if *printed == "" {
 		t.Error("expected usage output, got empty string")
 	}
@@ -502,6 +557,7 @@ func TestLoad_AutoHelpDisabled_ReturnsFlagErrHelp(t *testing.T) {
 	}
 
 	var cfg Config
+
 	err := Load(&cfg,
 		WithFlags([]string{"--help"}),
 		WithAutoHelp(false),
@@ -517,10 +573,12 @@ func TestLoad_WithoutValidation_SkipsValidation(t *testing.T) {
 	}
 
 	var cfg Config
+
 	err := Load(&cfg, WithoutValidation())
 	if err != nil {
 		t.Fatalf("Load() should not return error when validation is skipped, got: %v", err)
 	}
+
 	if cfg.Port != 0 {
 		t.Errorf("Port = %d, want 0 (default)", cfg.Port)
 	}
@@ -532,6 +590,7 @@ func TestLoad_ValidationRunsByDefault(t *testing.T) {
 	}
 
 	var cfg Config
+
 	err := Load(&cfg)
 	if !errors.Is(err, ErrValidation) {
 		t.Errorf("Load() error = %v, want ErrValidation", err)
@@ -547,16 +606,20 @@ func TestLoad_AutoGenerateConfig_YAML(t *testing.T) {
 	}
 
 	var cfg Config
+
 	err := Load(&cfg, WithFlags([]string{"--generate-config", "yaml"}))
 	if err != nil {
 		t.Fatalf("Load() returned error: %v", err)
 	}
+
 	if *exitCode != 0 {
 		t.Errorf("exit code = %d, want 0", *exitCode)
 	}
+
 	if !strings.Contains(*printed, `host: "localhost"`) {
 		t.Errorf("output should contain host default, got: %s", *printed)
 	}
+
 	if !strings.Contains(*printed, "# server host") {
 		t.Errorf("output should contain comment, got: %s", *printed)
 	}
@@ -570,13 +633,16 @@ func TestLoad_AutoGenerateConfig_JSON(t *testing.T) {
 	}
 
 	var cfg Config
+
 	err := Load(&cfg, WithFlags([]string{"--generate-config", "json"}))
 	if err != nil {
 		t.Fatalf("Load() returned error: %v", err)
 	}
+
 	if *exitCode != 0 {
 		t.Errorf("exit code = %d, want 0", *exitCode)
 	}
+
 	if !strings.Contains(*printed, `"host": "localhost"`) {
 		t.Errorf("output should contain host, got: %s", *printed)
 	}
@@ -590,13 +656,16 @@ func TestLoad_AutoGenerateConfig_TOML(t *testing.T) {
 	}
 
 	var cfg Config
+
 	err := Load(&cfg, WithFlags([]string{"--generate-config", "toml"}))
 	if err != nil {
 		t.Fatalf("Load() returned error: %v", err)
 	}
+
 	if *exitCode != 0 {
 		t.Errorf("exit code = %d, want 0", *exitCode)
 	}
+
 	if !strings.Contains(*printed, `host = "localhost"`) {
 		t.Errorf("output should contain host, got: %s", *printed)
 	}
@@ -610,13 +679,16 @@ func TestLoad_AutoGenerateConfig_EqualsSyntax(t *testing.T) {
 	}
 
 	var cfg Config
+
 	err := Load(&cfg, WithFlags([]string{"--generate-config=yaml"}))
 	if err != nil {
 		t.Fatalf("Load() returned error: %v", err)
 	}
+
 	if *exitCode != 0 {
 		t.Errorf("exit code = %d, want 0", *exitCode)
 	}
+
 	if *printed == "" {
 		t.Error("expected output, got empty string")
 	}
@@ -628,10 +700,12 @@ func TestLoad_AutoGenerateConfig_InvalidFormat(t *testing.T) {
 	}
 
 	var cfg Config
+
 	err := Load(&cfg, WithFlags([]string{"--generate-config", "xml"}))
 	if err == nil {
 		t.Fatal("expected error for invalid format")
 	}
+
 	if !errors.Is(err, ErrParse) {
 		t.Errorf("error = %v, want ErrParse", err)
 	}
@@ -643,6 +717,7 @@ func TestLoad_AutoGenerateConfigDisabled(t *testing.T) {
 	}
 
 	var cfg Config
+
 	err := Load(&cfg,
 		WithFlags([]string{"--generate-config", "yaml", "--host", "test"}),
 		WithAutoExample(false),
@@ -651,6 +726,7 @@ func TestLoad_AutoGenerateConfigDisabled(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Load() returned error: %v", err)
 	}
+
 	if cfg.Host != "test" {
 		t.Errorf("Host = %q, want %q", cfg.Host, "test")
 	}

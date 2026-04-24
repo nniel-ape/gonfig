@@ -58,6 +58,7 @@ func TestApplyFlags_BasicTypes(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			var cfg Config
+
 			v := reflect.ValueOf(&cfg).Elem()
 			fields := extractFields(v, "", nil)
 
@@ -99,9 +100,11 @@ func TestApplyFlags_OnlyExplicitOverride(t *testing.T) {
 	if cfg.Host != "from-env" {
 		t.Errorf("Host = %q, want %q (should not be overridden)", cfg.Host, "from-env")
 	}
+
 	if cfg.Port != 9999 {
 		t.Errorf("Port = %d, want %d", cfg.Port, 9999)
 	}
+
 	if cfg.Name != "from-file" {
 		t.Errorf("Name = %q, want %q (should not be overridden)", cfg.Name, "from-file")
 	}
@@ -134,9 +137,11 @@ func TestApplyFlags_ZeroValueExplicitlySet(t *testing.T) {
 	if cfg.Port != 0 {
 		t.Errorf("Port = %d, want 0 (explicitly set to zero)", cfg.Port)
 	}
+
 	if cfg.Debug != false {
 		t.Errorf("Debug = %v, want false (explicitly set to false)", cfg.Debug)
 	}
+
 	if cfg.Host != "" {
 		t.Errorf("Host = %q, want empty string (explicitly set to empty)", cfg.Host)
 	}
@@ -154,6 +159,7 @@ func TestApplyFlags_NestedStruct(t *testing.T) {
 	args := []string{"--db-host", "dbhost", "--db-port", "3306", "--log-level", "debug"}
 
 	var cfg Config
+
 	v := reflect.ValueOf(&cfg).Elem()
 	fields := extractFields(v, "", nil)
 
@@ -164,9 +170,11 @@ func TestApplyFlags_NestedStruct(t *testing.T) {
 	if cfg.DB.Host != "dbhost" {
 		t.Errorf("DB.Host = %q, want %q", cfg.DB.Host, "dbhost")
 	}
+
 	if cfg.DB.Port != 3306 {
 		t.Errorf("DB.Port = %d, want %d", cfg.DB.Port, 3306)
 	}
+
 	if cfg.LogLevel != "debug" {
 		t.Errorf("LogLevel = %q, want %q", cfg.LogLevel, "debug")
 	}
@@ -181,6 +189,7 @@ func TestApplyFlags_ExplicitFlagTag(t *testing.T) {
 	args := []string{"--server-host", "tagged", "--server-port", "4444"}
 
 	var cfg Config
+
 	v := reflect.ValueOf(&cfg).Elem()
 	fields := extractFields(v, "", nil)
 
@@ -191,6 +200,7 @@ func TestApplyFlags_ExplicitFlagTag(t *testing.T) {
 	if cfg.Host != "tagged" {
 		t.Errorf("Host = %q, want %q", cfg.Host, "tagged")
 	}
+
 	if cfg.Port != 4444 {
 		t.Errorf("Port = %d, want %d", cfg.Port, 4444)
 	}
@@ -204,6 +214,7 @@ func TestApplyFlags_UnknownFlag(t *testing.T) {
 	args := []string{"--unknown-flag", "value"}
 
 	var cfg Config
+
 	v := reflect.ValueOf(&cfg).Elem()
 	fields := extractFields(v, "", nil)
 
@@ -222,6 +233,7 @@ func TestApplyFlags_Help(t *testing.T) {
 	args := []string{"--help"}
 
 	var cfg Config
+
 	v := reflect.ValueOf(&cfg).Elem()
 	fields := extractFields(v, "", nil)
 
@@ -229,6 +241,7 @@ func TestApplyFlags_Help(t *testing.T) {
 	if err == nil {
 		t.Fatal("applyFlags() expected error for --help, got nil")
 	}
+
 	if !errors.Is(err, flag.ErrHelp) {
 		t.Errorf("applyFlags() error = %v, want wrapped flag.ErrHelp", err)
 	}
@@ -252,6 +265,7 @@ func TestApplyFlags_NoArgs(t *testing.T) {
 	if cfg.Host != "preserved" {
 		t.Errorf("Host = %q, want %q", cfg.Host, "preserved")
 	}
+
 	if cfg.Port != 1234 {
 		t.Errorf("Port = %d, want %d", cfg.Port, 1234)
 	}
@@ -265,6 +279,7 @@ func TestApplyFlags_InvalidValue(t *testing.T) {
 	args := []string{"--port", "not-a-number"}
 
 	var cfg Config
+
 	v := reflect.ValueOf(&cfg).Elem()
 	fields := extractFields(v, "", nil)
 
@@ -311,6 +326,7 @@ func TestApplyFlags_ShortFlags(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			var cfg Config
+
 			v := reflect.ValueOf(&cfg).Elem()
 			fields := extractFields(v, "", nil)
 
@@ -354,6 +370,7 @@ func TestApplyFlags_DuplicateShortFlag(t *testing.T) {
 	}
 
 	var cfg Config
+
 	v := reflect.ValueOf(&cfg).Elem()
 	fields := extractFields(v, "", nil)
 
@@ -361,6 +378,7 @@ func TestApplyFlags_DuplicateShortFlag(t *testing.T) {
 	if err == nil {
 		t.Fatal("applyFlags() expected error for duplicate short flag, got nil")
 	}
+
 	if !strings.Contains(err.Error(), "duplicate short flag") {
 		t.Errorf("error = %q, want it to mention duplicate short flag", err.Error())
 	}
@@ -375,6 +393,7 @@ func TestApplyFlags_EqualsSyntax(t *testing.T) {
 	args := []string{"--host=eqhost", "--port=5555"}
 
 	var cfg Config
+
 	v := reflect.ValueOf(&cfg).Elem()
 	fields := extractFields(v, "", nil)
 
@@ -385,6 +404,7 @@ func TestApplyFlags_EqualsSyntax(t *testing.T) {
 	if cfg.Host != "eqhost" {
 		t.Errorf("Host = %q, want %q", cfg.Host, "eqhost")
 	}
+
 	if cfg.Port != 5555 {
 		t.Errorf("Port = %d, want %d", cfg.Port, 5555)
 	}

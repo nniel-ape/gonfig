@@ -15,10 +15,12 @@ func TestDeepNestedStruct(t *testing.T) {
 	}
 
 	var cfg Config
+
 	err := Load(&cfg)
 	if err != nil {
 		t.Fatalf("Load error: %v", err)
 	}
+
 	if cfg.A.B.C != "deep" {
 		t.Errorf("A.B.C = %q, want %q", cfg.A.B.C, "deep")
 	}
@@ -28,11 +30,14 @@ func TestDeepNestedStruct(t *testing.T) {
 
 	// Verify env/flag derivation for deeply nested
 	t.Setenv("APP_A_B_C", "from-env")
+
 	var cfg2 Config
+
 	err = Load(&cfg2, WithEnvPrefix("APP"))
 	if err != nil {
 		t.Fatalf("Load error: %v", err)
 	}
+
 	if cfg2.A.B.C != "from-env" {
 		t.Errorf("A.B.C = %q, want %q", cfg2.A.B.C, "from-env")
 	}

@@ -50,9 +50,11 @@ func main() {
 	var ve *gonfig.ValidationError
 	if errors.As(err, &ve) {
 		fmt.Fprintln(os.Stderr, "Configuration errors:")
+
 		for _, fe := range ve.Errors {
 			fmt.Fprintf(os.Stderr, "  - %s: %s\n", fe.Field, fe.Message)
 		}
+
 		os.Exit(1)
 	}
 

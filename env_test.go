@@ -63,6 +63,7 @@ func TestApplyEnv_BasicTypes(t *testing.T) {
 			}
 
 			var cfg Config
+
 			v := reflect.ValueOf(&cfg).Elem()
 			fields := extractFields(v, "", nil)
 
@@ -95,6 +96,7 @@ func TestApplyEnv_WithPrefix(t *testing.T) {
 		t.Setenv("APP_PORT", "3000")
 
 		var cfg Config
+
 		v := reflect.ValueOf(&cfg).Elem()
 		fields := extractFields(v, "", nil)
 
@@ -105,6 +107,7 @@ func TestApplyEnv_WithPrefix(t *testing.T) {
 		if cfg.Host != "prefixed-host" {
 			t.Errorf("Host = %q, want %q", cfg.Host, "prefixed-host")
 		}
+
 		if cfg.Port != 3000 {
 			t.Errorf("Port = %d, want %d", cfg.Port, 3000)
 		}
@@ -115,6 +118,7 @@ func TestApplyEnv_WithPrefix(t *testing.T) {
 		t.Setenv("APP_DB_PORT", "5432")
 
 		var cfg NestedConfig
+
 		v := reflect.ValueOf(&cfg).Elem()
 		fields := extractFields(v, "", nil)
 
@@ -125,6 +129,7 @@ func TestApplyEnv_WithPrefix(t *testing.T) {
 		if cfg.DB.Host != "db-host" {
 			t.Errorf("DB.Host = %q, want %q", cfg.DB.Host, "db-host")
 		}
+
 		if cfg.DB.Port != 5432 {
 			t.Errorf("DB.Port = %d, want %d", cfg.DB.Port, 5432)
 		}
@@ -156,9 +161,11 @@ func TestApplyEnv_NotSet(t *testing.T) {
 	if cfg.Host != "original" {
 		t.Errorf("Host = %q, want %q", cfg.Host, "original")
 	}
+
 	if cfg.Port != 1234 {
 		t.Errorf("Port = %d, want %d", cfg.Port, 1234)
 	}
+
 	if cfg.Flag != true {
 		t.Errorf("Flag = %v, want true", cfg.Flag)
 	}
@@ -196,6 +203,7 @@ func TestApplyEnv_InvalidValue(t *testing.T) {
 			}
 
 			var cfg Config
+
 			v := reflect.ValueOf(&cfg).Elem()
 			fields := extractFields(v, "", nil)
 
@@ -217,6 +225,7 @@ func TestApplyEnv_ExplicitEnvTag(t *testing.T) {
 	t.Setenv("MY_PORT", "7777")
 
 	var cfg Config
+
 	v := reflect.ValueOf(&cfg).Elem()
 	fields := extractFields(v, "", nil)
 
@@ -227,6 +236,7 @@ func TestApplyEnv_ExplicitEnvTag(t *testing.T) {
 	if cfg.Host != "tagged-host" {
 		t.Errorf("Host = %q, want %q", cfg.Host, "tagged-host")
 	}
+
 	if cfg.Port != 7777 {
 		t.Errorf("Port = %d, want %d", cfg.Port, 7777)
 	}
@@ -241,6 +251,7 @@ func TestApplyEnv_ExplicitTagWithPrefix(t *testing.T) {
 	t.Setenv("APP_CUSTOM_HOST", "prefixed-tagged")
 
 	var cfg Config
+
 	v := reflect.ValueOf(&cfg).Elem()
 	fields := extractFields(v, "", nil)
 
@@ -275,9 +286,11 @@ func TestApplyEnv_PartialSet(t *testing.T) {
 	if cfg.Host != "default-host" {
 		t.Errorf("Host = %q, want %q", cfg.Host, "default-host")
 	}
+
 	if cfg.Port != 9090 {
 		t.Errorf("Port = %d, want %d", cfg.Port, 9090)
 	}
+
 	if cfg.Name != "default-name" {
 		t.Errorf("Name = %q, want %q", cfg.Name, "default-name")
 	}

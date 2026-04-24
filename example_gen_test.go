@@ -16,6 +16,7 @@ func TestExample_FlatStruct_YAML(t *testing.T) {
 	}
 
 	var cfg Config
+
 	got := Example(&cfg, YAML)
 
 	assertContains(t, got, `# server host (required)`)
@@ -34,12 +35,14 @@ func TestExample_FlatStruct_JSON(t *testing.T) {
 	}
 
 	var cfg Config
+
 	got := Example(&cfg, JSON)
 
 	// JSON has no comments.
 	if strings.Contains(got, "#") {
 		t.Error("JSON output should not contain comments")
 	}
+
 	assertContains(t, got, `"host": "localhost"`)
 	assertContains(t, got, `"port": 8080`)
 }
@@ -52,6 +55,7 @@ func TestExample_FlatStruct_TOML(t *testing.T) {
 	}
 
 	var cfg Config
+
 	got := Example(&cfg, TOML)
 
 	assertContains(t, got, `# server host (required)`)
@@ -71,6 +75,7 @@ func TestExample_NestedStruct_YAML(t *testing.T) {
 	}
 
 	var cfg Config
+
 	got := Example(&cfg, YAML)
 
 	assertContains(t, got, `db:`)
@@ -89,6 +94,7 @@ func TestExample_NestedStruct_TOML(t *testing.T) {
 	}
 
 	var cfg Config
+
 	got := Example(&cfg, TOML)
 
 	assertContains(t, got, `[db]`)
@@ -107,6 +113,7 @@ func TestExample_NestedStruct_JSON(t *testing.T) {
 	}
 
 	var cfg Config
+
 	got := Example(&cfg, JSON)
 
 	assertContains(t, got, `"db": {`)
@@ -123,6 +130,7 @@ func TestExample_FieldsWithoutDefaults(t *testing.T) {
 	}
 
 	var cfg Config
+
 	got := Example(&cfg, YAML)
 
 	assertContains(t, got, `# app name (required)`)
@@ -140,6 +148,7 @@ func TestExample_Slices(t *testing.T) {
 	}
 
 	var cfg Config
+
 	got := Example(&cfg, YAML)
 
 	assertContains(t, got, `tags: ["web", "api"]`)
@@ -155,6 +164,7 @@ func TestExample_Maps(t *testing.T) {
 	}
 
 	var cfg Config
+
 	got := Example(&cfg, YAML)
 
 	assertContains(t, got, `labels: {}`)
@@ -168,6 +178,7 @@ func TestExample_Duration(t *testing.T) {
 	}
 
 	var cfg Config
+
 	got := Example(&cfg, YAML)
 
 	assertContains(t, got, `timeout: "5s"`)
@@ -178,6 +189,7 @@ func TestExample_EmptyStruct(t *testing.T) {
 	type Config struct{}
 
 	var cfg Config
+
 	got := Example(&cfg, YAML)
 
 	if got != "" {
@@ -194,6 +206,7 @@ func TestExample_NilTarget(t *testing.T) {
 
 func TestExample_NonStructTarget(t *testing.T) {
 	var s string
+
 	got := Example(&s, YAML)
 	if got != "" {
 		t.Errorf("non-struct target should produce empty string, got: %q", got)
@@ -205,11 +218,13 @@ func TestExample_GonfigTagOverride(t *testing.T) {
 		Name   string  `default:"momentum"`
 		Weight float64 `default:"0.5"`
 	}
+
 	type Config struct {
 		Strategy Strategy `gonfig:"lm"`
 	}
 
 	var cfg Config
+
 	got := Example(&cfg, YAML)
 
 	assertContains(t, got, `lm:`)
@@ -221,11 +236,13 @@ func TestExample_GonfigTagOverride_TOML(t *testing.T) {
 	type Strategy struct {
 		Name string `default:"momentum"`
 	}
+
 	type Config struct {
 		Strategy Strategy `gonfig:"lm"`
 	}
 
 	var cfg Config
+
 	got := Example(&cfg, TOML)
 
 	assertContains(t, got, `[lm]`)
@@ -237,6 +254,7 @@ func TestExtractAndRemoveGenerateConfig_EqualsSyntax(t *testing.T) {
 	if format != "yaml" {
 		t.Errorf("format = %q, want %q", format, "yaml")
 	}
+
 	if len(args) != 2 || args[0] != "--port" || args[1] != "8080" {
 		t.Errorf("args = %v, want [--port 8080]", args)
 	}
@@ -247,6 +265,7 @@ func TestExtractAndRemoveGenerateConfig_SpaceSyntax(t *testing.T) {
 	if format != "json" {
 		t.Errorf("format = %q, want %q", format, "json")
 	}
+
 	if len(args) != 2 || args[0] != "--port" || args[1] != "8080" {
 		t.Errorf("args = %v, want [--port 8080]", args)
 	}
@@ -257,6 +276,7 @@ func TestExtractAndRemoveGenerateConfig_NotPresent(t *testing.T) {
 	if format != "" {
 		t.Errorf("format = %q, want empty", format)
 	}
+
 	if len(args) != 2 {
 		t.Errorf("args = %v, want [--port 8080]", args)
 	}
@@ -264,6 +284,7 @@ func TestExtractAndRemoveGenerateConfig_NotPresent(t *testing.T) {
 
 func assertContains(t *testing.T, haystack, needle string) {
 	t.Helper()
+
 	if !strings.Contains(haystack, needle) {
 		t.Errorf("expected output to contain %q\nfull output:\n%s", needle, haystack)
 	}

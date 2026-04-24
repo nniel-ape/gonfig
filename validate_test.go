@@ -79,17 +79,21 @@ func TestValidateRequired(t *testing.T) {
 			if tt.wantErr && err == nil {
 				t.Fatalf("expected validation error, got nil")
 			}
+
 			if !tt.wantErr && err != nil {
 				t.Fatalf("expected no error, got %v", err)
 			}
+
 			if tt.wantErr {
 				var ve *ValidationError
 				if !errors.As(err, &ve) {
 					t.Fatalf("expected *ValidationError, got %T", err)
 				}
+
 				if len(ve.Errors) == 0 {
 					t.Fatal("expected at least one FieldError")
 				}
+
 				if ve.Errors[0].Rule != "required" {
 					t.Errorf("expected rule 'required', got %q", ve.Errors[0].Rule)
 				}
@@ -213,14 +217,17 @@ func TestValidateMinMax(t *testing.T) {
 			if tt.wantErr && err == nil {
 				t.Fatalf("expected validation error, got nil")
 			}
+
 			if !tt.wantErr && err != nil {
 				t.Fatalf("expected no error, got %v", err)
 			}
+
 			if tt.wantErr {
 				var ve *ValidationError
 				if !errors.As(err, &ve) {
 					t.Fatalf("expected *ValidationError, got %T", err)
 				}
+
 				if tt.rule != "" && ve.Errors[0].Rule != tt.rule {
 					t.Errorf("expected rule %q, got %q", tt.rule, ve.Errors[0].Rule)
 				}
@@ -295,14 +302,17 @@ func TestValidateOneof(t *testing.T) {
 			if tt.wantErr && err == nil {
 				t.Fatalf("expected validation error, got nil")
 			}
+
 			if !tt.wantErr && err != nil {
 				t.Fatalf("expected no error, got %v", err)
 			}
+
 			if tt.wantErr {
 				var ve *ValidationError
 				if !errors.As(err, &ve) {
 					t.Fatalf("expected *ValidationError, got %T", err)
 				}
+
 				if !containsRule(ve, "oneof=") {
 					t.Error("expected oneof rule in errors")
 				}
@@ -367,14 +377,17 @@ func TestValidateCombinedRules(t *testing.T) {
 			if tt.wantErr && err == nil {
 				t.Fatalf("expected validation error, got nil")
 			}
+
 			if !tt.wantErr && err != nil {
 				t.Fatalf("expected no error, got %v", err)
 			}
+
 			if tt.wantErr && tt.wantRules != nil {
 				var ve *ValidationError
 				if !errors.As(err, &ve) {
 					t.Fatalf("expected *ValidationError, got %T", err)
 				}
+
 				for _, rule := range tt.wantRules {
 					if !containsRule(ve, rule) {
 						t.Errorf("expected rule %q in errors, got %v", rule, ve.Errors)
@@ -400,8 +413,8 @@ func TestValidationErrorMultipleFields(t *testing.T) {
 
 	rv := reflect.ValueOf(cfg).Elem()
 	fields := extractFields(rv, "", nil)
-	err := validate(cfg, fields)
 
+	err := validate(cfg, fields)
 	if err == nil {
 		t.Fatal("expected validation error, got nil")
 	}
@@ -421,9 +434,11 @@ func TestValidationErrorMultipleFields(t *testing.T) {
 	if !containsSubstring(errMsg, "Host") {
 		t.Errorf("error message should mention Host: %s", errMsg)
 	}
+
 	if !containsSubstring(errMsg, "Port") {
 		t.Errorf("error message should mention Port: %s", errMsg)
 	}
+
 	if !containsSubstring(errMsg, "LogLevel") {
 		t.Errorf("error message should mention LogLevel: %s", errMsg)
 	}
@@ -442,6 +457,7 @@ func TestValidateNoRules(t *testing.T) {
 
 	rv := reflect.ValueOf(cfg).Elem()
 	fields := extractFields(rv, "", nil)
+
 	err := validate(cfg, fields)
 	if err != nil {
 		t.Fatalf("expected no error for struct without validate tags, got %v", err)
@@ -453,6 +469,7 @@ func TestValidateNestedStruct(t *testing.T) {
 		Host string `validate:"required"`
 		Port int    `validate:"min=1,max=65535"`
 	}
+
 	type Config struct {
 		DB DB
 	}
@@ -461,6 +478,7 @@ func TestValidateNestedStruct(t *testing.T) {
 		cfg := &Config{DB: DB{Host: "localhost", Port: 5432}}
 		rv := reflect.ValueOf(cfg).Elem()
 		fields := extractFields(rv, "", nil)
+
 		err := validate(cfg, fields)
 		if err != nil {
 			t.Fatalf("expected no error, got %v", err)
@@ -471,10 +489,12 @@ func TestValidateNestedStruct(t *testing.T) {
 		cfg := &Config{DB: DB{Host: "", Port: 0}}
 		rv := reflect.ValueOf(cfg).Elem()
 		fields := extractFields(rv, "", nil)
+
 		err := validate(cfg, fields)
 		if err == nil {
 			t.Fatal("expected error, got nil")
 		}
+
 		var ve *ValidationError
 		if !errors.As(err, &ve) {
 			t.Fatalf("expected *ValidationError, got %T", err)
@@ -486,17 +506,21 @@ func TestValidateNestedStruct(t *testing.T) {
 		// Check field paths include the nested prefix
 		foundHost := false
 		foundPort := false
+
 		for _, fe := range ve.Errors {
 			if fe.Field == "DB.Host" {
 				foundHost = true
 			}
+
 			if fe.Field == "DB.Port" {
 				foundPort = true
 			}
 		}
+
 		if !foundHost {
 			t.Error("expected error for field DB.Host")
 		}
+
 		if !foundPort {
 			t.Error("expected error for field DB.Port")
 		}
@@ -510,6 +534,7 @@ func TestFieldErrorString(t *testing.T) {
 		Message: "value 0 is less than minimum 1",
 	}
 	got := fe.Error()
+
 	want := "field DB.Port: value 0 is less than minimum 1"
 	if got != want {
 		t.Errorf("got %q, want %q", got, want)
@@ -523,10 +548,12 @@ func TestValidationErrorString(t *testing.T) {
 			{Field: "Port", Rule: "min=1", Message: "value 0 is less than minimum 1"},
 		},
 	}
+
 	got := ve.Error()
 	if !containsSubstring(got, "validation failed:") {
 		t.Errorf("expected 'validation failed:' prefix, got %q", got)
 	}
+
 	if !containsSubstring(got, "Host") || !containsSubstring(got, "Port") {
 		t.Errorf("expected both field names in error, got %q", got)
 	}
@@ -539,6 +566,7 @@ func containsRule(ve *ValidationError, rulePrefix string) bool {
 			return true
 		}
 	}
+
 	return false
 }
 
@@ -552,5 +580,6 @@ func findSubstring(s, sub string) bool {
 			return true
 		}
 	}
+
 	return false
 }
